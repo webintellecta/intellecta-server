@@ -22,7 +22,7 @@ export const registerUser = async (data: any , res:Response) => {
   if (data.age < 5 || data.age > 18) {
     throw new CustomError("you are not eligible to create account", 404);
   }
-  const passwordHash = await hashPassword(data.Password);
+  const passwordHash = await hashPassword(data.password);
   if (!passwordHash) {
     throw new CustomError("password encryption failed", 404);
   }
@@ -112,11 +112,11 @@ export const logOutUserService = async(data:any , res:Response)=>{
   return {message:"user logged out"}
 }
 
-// export const changePasswordService = async (id:string | undefined | JwtPayload , data:any ) => {
-//     const newPassword = data.Password
-//     const currentUser = await User.findById(id).select("password")
-//     const  currentPassword:string  = currentUser?.password
-//     const passwordCheck = await comparePassword(newPassword , currentPassword )
+export const changePasswordService = async (id:string | undefined | JwtPayload , data:any ) => {
+    const newPassword = data.Password
+    const currentUser = await User.findById(id).select("password")
+    // const  currentPassword:string  = currentUser?.password
+    // const passwordCheck = await comparePassword(newPassword , currentPassword )
 
 
-// }
+}

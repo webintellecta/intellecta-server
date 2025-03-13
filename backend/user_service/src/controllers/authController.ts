@@ -10,7 +10,7 @@ export const userRegistration = async (req: Request, res: Response) => {
   }
   return res
     .status(200)
-    .json({ success: true, message: "user registered successfully" });
+    .json({ success: true, message: "user registered successfully" ,data:data });
 };
 
 

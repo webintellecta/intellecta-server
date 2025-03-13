@@ -3,7 +3,7 @@ import CustomError from "./customErrorHandler";
 
 // const TokenSecret = process.env.TOKEN_SECRET;
 
-export const generateToken = (userId: string): string => {
+export const generateToken = (userId: string | unknown): string => {
   if (!process.env.TOKEN_SECRET) {
     throw new CustomError(
       "token secret is not defined in the environment variables",

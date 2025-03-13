@@ -1,26 +1,19 @@
-// import app from "./app";
 
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
+import app from './app'
+import dotenv from 'dotenv'
+import connectDb from './config/db'
 
-dotenv.config();
 
-const app = express();
+dotenv.config()
+const PORT = process.env.PORT
 
-// Middleware
-app.use(express.json());
-app.use(cors());
+connectDb()
 
-const PORT = process.env.PORT || 5000;
 
-// Test Route
-app.get("/", (req, res) => {
-  res.send("Server is running!");
-});
+app.listen(PORT, ()=>{
+    console.log(`server is running in ${PORT}`)
+})
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+
+
+

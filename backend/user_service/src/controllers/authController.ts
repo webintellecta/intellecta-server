@@ -12,9 +12,8 @@ export const userRegistration = async (req: Request, res: Response) => {
     .json({ success: true, message: "user registered successfully" });
 };
 
+export const userLogin = async (req: Request, res: Response) => {
+  const loginData = await loginUserService(req.body);
 
-export const userLogin = async (req: Request , res: Response) =>  {
-    const loginData = await loginUserService(req.body)
-      
-   
-}
+  return res.status(200).json({ message: "user logged in", data: loginData });
+};

@@ -1,9 +1,13 @@
+import { Response } from "express";
 import User from "../models/userModel";
 import CustomError from "../utils/customErrorHandler";
 import { generateToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/passwordHash";
+import { JwtPayload } from "jsonwebtoken";
 
-export const registerUser = async (data: any) => {
+
+//user register
+export const registerUser = async (data: any , res:Response) => {
   if (!data) {
     throw new CustomError("input datas not found", 404);
   }
@@ -31,14 +35,20 @@ export const registerUser = async (data: any) => {
     phone: data.phone,
   });
   await newUser.save();
-  return { message: "user registered successfully" };
+
+  const token =  generateToken(newUser._id)
+  res.cookie("token", token,{
+    httpOnly: true,
+    secure: false,
+  })
+
+  return { message: "user registered successfully", token:token };
 };
 
 
 
 
-
-
+//login
 interface LoginData {
   email: string;
   password: string;
@@ -64,19 +74,24 @@ export interface IUser extends Document {
   _id: import("mongoose").Types.ObjectId;
 }
 
-export const loginUserService = async (data: LoginData): Promise<LoginResponse> => {
-  const userExist = await User.findOne({ email: data.email }) as IUser | null;
+export const loginUserService = async (data: LoginData , res:Response): Promise<LoginResponse> => {
+  const userExist = await User.findOne({ email: data.email }).select("password") as IUser | null;
   if (!userExist) {
       throw new CustomError("User not found, please register", 404);
   }
 
   const validateUser = await comparePassword(data.password, userExist.password);
+
   if (!validateUser) {
       throw new CustomError("Incorrect password", 401); // 401 for unauthorized
   }
 
   const token = generateToken(userExist._id.toString()); // Convert ObjectId to string
 
+  res.cookie("token",token,{
+    httpOnly: true,
+    secure: false,
+  })
   return {
       message: "User logged in", // Fixed typo: "loggined" → "logged in"
       token, // No .toString() needed
@@ -87,3 +102,21 @@ export const loginUserService = async (data: LoginData): Promise<LoginResponse> 
       },
   };
 };
+
+
+export const logOutUserService = async(data:any , res:Response)=>{
+  res.clearCookie("token",{
+    httpOnly: true, // Match the settings from login
+      secure: false,
+  })
+  return {message:"user logged out"}
+}
+
+// export const changePasswordService = async (id:string | undefined | JwtPayload , data:any ) => {
+//     const newPassword = data.Password
+//     const currentUser = await User.findById(id).select("password")
+//     const  currentPassword:string  = currentUser?.password
+//     const passwordCheck = await comparePassword(newPassword , currentPassword )
+
+
+// }

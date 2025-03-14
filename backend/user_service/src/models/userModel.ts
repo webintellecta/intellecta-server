@@ -4,7 +4,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  dob: Date,
+  age: Number,
   phone: string,
   role: "student" | "parent" | "teacher" | "admin";
   profilePic?: string;
@@ -28,9 +28,11 @@ const UserSchema: Schema = new Schema(
         required: true,
         select: false
     },
-    dob: {
-        type: Date,
-        required: true 
+    age: {
+        type: Number,
+        required: true ,
+        min:5,
+        max:18
     },
     phone: {
         type: String

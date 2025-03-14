@@ -31,6 +31,9 @@ export const userLogout = async (req:Request, res:Response) => {
 //changePassword
 export const userChangePassword = async (req:Request, res:Response) => {
   const userId = req.user
+  if(!userId){
+    throw new CustomError("user not found, please login", 404)
+  }
   const changePsswdData = await changePasswordService(userId , req.body)
   return res.status(200).json({message:"password changed"})
 }

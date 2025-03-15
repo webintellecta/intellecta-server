@@ -4,6 +4,7 @@ import { determineUserLevel } from "../utils/userLevel";
 import CustomError from "../utils/customError";
 import { getAiTutorResponse } from "../utils/huggingFaceService";
 import { Document } from "mongoose";
+import Assessment from "../models/assessmentModel";
 
 interface QuestionDocument extends Document {
     _id: string;
@@ -62,6 +63,8 @@ export const evaluateAssessmentService = async( data: any) => {
         strengths,
         weaknesses
     };
+    await Assessment.create(assessmentResult);
+
     const aiFeedback = await getAiTutorResponse(assessmentResult);
     return { assessmentResult, aiFeedback };
 

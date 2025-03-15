@@ -22,7 +22,7 @@ export const registerUser = async (data: any , res:Response) => {
   if (data.age < 5 || data.age > 18) {
     throw new CustomError("you are not eligible to create account", 404);
   }
-  const passwordHash = await hashPassword(data.Password);
+  const passwordHash = await hashPassword(data.password);
   if (!passwordHash) {
     throw new CustomError("password encryption failed", 404);
   }
@@ -112,11 +112,34 @@ export const logOutUserService = async(data:any , res:Response)=>{
   return {message:"user logged out"}
 }
 
-// export const changePasswordService = async (id:string | undefined | JwtPayload , data:any ) => {
-//     const newPassword = data.Password
-//     const currentUser = await User.findById(id).select("password")
-//     const  currentPassword:string  = currentUser?.password
-//     const passwordCheck = await comparePassword(newPassword , currentPassword )
+export const changePasswordService = async (id:string | undefined | JwtPayload , data:any ) => {
+    const oldPassword = data.currentpassword
+    if(!oldPassword){
+      throw new CustomError("old password required",404)
+    }
+    const newpassword = data.newpassword
+    if(!newpassword){
+      throw new CustomError("new password required",404)
+    }
 
-
-// }
+    if(oldPassword == newpassword){
+      throw new CustomError("the new password should not be same as the current password",404)
+    }
+    const currentUserData = await User.findById(id).select("password")
+    if(!currentUserData){
+      throw new CustomError("cannot fetch current user data",404)
+    }
+    const fetchedPassword = currentUserData.password          
+    const passwordCheck = await comparePassword(oldPassword , fetchedPassword )
+    if(!passwordCheck){
+      throw new CustomError("current password is wrong",404)
+    }
+    const hashedPsswd = await hashPassword(newpassword)
+    if(!hashedPsswd){
+      throw new CustomError("password is not hashed",404)
+    }
+    
+    currentUserData.password = hashedPsswd
+    await currentUserData.save()
+    return {message:"password changed successfully"}
+}

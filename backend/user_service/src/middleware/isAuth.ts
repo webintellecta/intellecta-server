@@ -22,12 +22,15 @@ export const isAuthenticate = async (
     if(!token){
         throw new CustomError("token is not exist in the cookie", token)
     }
-    jwt.verify(token, process.env.TOKEN_SECRET as string, (err : any, decoded: any)=>{
-        if(err){
-            throw new CustomError("token verification failed",404)
-        }
+    try{
+      const decoded =jwt.verify(token, process.env.TOKEN_SECRET as string)
+      req.user = decoded as DecodedToken
+      next()
+    }
+    catch(err){
+      return next(new CustomError(`Invalid or expired token ${err}`, 401));
+    }
+    
 
-        req.user = decoded as DecodedToken
-        next()
-    })
+       
 };

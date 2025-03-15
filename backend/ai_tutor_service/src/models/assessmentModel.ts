@@ -1,21 +1,43 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 interface IAssessment extends Document {
-  userId: string;
-  responses: { questionId: number; answer: string }[];
-  score: number;
-  level: "beginner" | "intermediate" | "advanced";
+  userId: mongoose.Types.ObjectId;
+  totalQuestions: number;
+    correctCount: number;
+    scorePercentage: number;
+    strengths: string[]; 
+    weaknesses: string[]; 
 }
 
 const AssessmentSchema: Schema = new Schema(
   {
-    userId: { type: String, required: true },
-    responses: [{ questionId: Number, answer: String }],
-    score: { type: Number, default: 0 },
-    level: { type: String, enum: ["beginner", "intermediate", "advanced"], default: "beginner" },
+    userId: { 
+      type: Schema.Types.ObjectId, 
+      ref: "User", required: true 
+    },
+    totalQuestions: { 
+      type: Number, 
+      required: true 
+    },
+    correctCount: { 
+      type: Number, 
+      required: true 
+    },
+    scorePercentage: { 
+      type: Number, 
+      required: true 
+    },
+    strengths: { 
+      type: [String], 
+      default: [] 
+    },
+    weaknesses: { 
+      type: [String], 
+      default: [] 
+    },
   },
   { timestamps: true }
 );
 
-const Assessment = mongoose.model<IAssessment>("Assessment", AssessmentSchema);
+const Assessment = mongoose.model<IAssessment>("AssessmentResult", AssessmentSchema);
 export default Assessment;

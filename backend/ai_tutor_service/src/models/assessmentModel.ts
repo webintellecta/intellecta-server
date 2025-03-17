@@ -11,7 +11,7 @@ interface IAssessment extends Document {
 
 const AssessmentSchema: Schema = new Schema(
   {
-    userId: { 
+    userId : { 
       type: Schema.Types.ObjectId, 
       ref: "User", required: true 
     },

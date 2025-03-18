@@ -10,7 +10,7 @@ export interface IQuestion extends Document {
 
 const questionSchema: Schema = new Schema ({
     subject: { 
-        type: String, 
+        type: String,  
         required: true 
     },
     question: { 

@@ -1,6 +1,7 @@
 import express from "express";
 import {
   forgotPassword,
+  refreshTokeToAccessToken,
   resetPassword,
   userChangePassword,
   userLogin,
@@ -33,11 +34,14 @@ userServiceRouter.get(
 userServiceRouter.post("/forgotpassword/:id", asyncHandler(forgotPassword));
 userServiceRouter.post('/resetPassword', asyncHandler(resetPassword));
 
+
 //profile-upload
 userServiceRouter.post(
     '/upload-profile', 
     isAuthenticate, 
     upload.single('image'), 
     asyncHandler(profilePictureController));
+//access token to refresh token
+userServiceRouter.post("/refreshaccesstoken", asyncHandler(refreshTokeToAccessToken))
 
 export default userServiceRouter;

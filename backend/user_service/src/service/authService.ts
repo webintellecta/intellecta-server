@@ -8,6 +8,7 @@ import { JwtPayload } from "jsonwebtoken";
 
 //user register
 export const registerUser = async (data: any , res:Response) => {
+  console.log("Registering User with Data:", data);
   if (!data) {
     throw new CustomError("input datas not found", 404);
   }
@@ -27,13 +28,14 @@ export const registerUser = async (data: any , res:Response) => {
     throw new CustomError("password encryption failed", 404);
   }
   const newUser = new User({
-    name: data.name,
+    name: data.firstname + " " + data.lastname,
     email: data.email,
     password: passwordHash,
-    profile: data.profile,
+    profile: data.profile ||"",
     age: data.age,
     phone: data.phone,
   });
+  console.log("Saving New User:", newUser); 
   await newUser.save();
 
   const token =  generateToken(newUser._id)

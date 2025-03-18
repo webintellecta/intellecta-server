@@ -17,7 +17,9 @@ dotenv.config();
 
 //registeration
 export const userRegistration = async (req: Request, res: Response) => {
+  console.log("incoming", req.body);
   const data = await registerUser(req.body, res);
+  console.log("object", data);
   if (!data) {
     throw new CustomError("registration failed", 404);
   }

@@ -8,29 +8,36 @@ import {
   userRegistration,
 } from "../controllers/authController";
 import { asyncHandler } from "../middleware/asyncHandler";
-import { getUserById } from "../controllers/userController";
+import { getUserById, profilePictureController } from "../controllers/userController";
 import { isAuthenticate } from "../middleware/isAuth";
+import {upload} from "../middleware/profilePicUploader"
 
 const userServiceRouter = express.Router();
 
 userServiceRouter.post("/register", asyncHandler(userRegistration));
 userServiceRouter.post("/login", asyncHandler(userLogin));
 userServiceRouter.post("/logout", asyncHandler(userLogout));
+
 userServiceRouter.patch(
   "/changepassword",
   isAuthenticate,
   asyncHandler(userChangePassword)
 );
 userServiceRouter.get(
-  "/getuserbyid:id",
+  "/getuserbyid/:id",
   isAuthenticate,
   asyncHandler(getUserById)
 );
 
-//forgot-password ==
+//forgot-password
 userServiceRouter.post("/forgotpassword/:id", asyncHandler(forgotPassword));
 userServiceRouter.post('/resetPassword', asyncHandler(resetPassword));
 
-// ===
+//profile-upload
+userServiceRouter.post(
+    '/upload-profile', 
+    isAuthenticate, 
+    upload.single('image'), 
+    asyncHandler(profilePictureController));
 
 export default userServiceRouter;

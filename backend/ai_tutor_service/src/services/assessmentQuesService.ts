@@ -63,9 +63,12 @@ export const evaluateAssessmentService = async( data: any) => {
         strengths,
         weaknesses
     };
-    await Assessment.create(assessmentResult);
-
     const aiFeedback = await getAiTutorResponse(assessmentResult);
-    return { assessmentResult, aiFeedback };
+    const savedAssessment = await Assessment.create({
+        ...assessmentResult,
+        aiFeedback: aiFeedback[0]?.generated_text || "No feedback available"
+    });
+
+    return { assessmentResult: savedAssessment };
 
 }

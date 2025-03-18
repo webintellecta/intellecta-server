@@ -1,13 +1,14 @@
 import { Response } from "express";
 import User from "../models/userModel";
 import CustomError from "../utils/customErrorHandler";
-import { generateToken } from "../utils/jwt";
+import { generateRefreshToken, generateToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/passwordHash";
 import { JwtPayload } from "jsonwebtoken";
 
 
 //user register
 export const registerUser = async (data: any , res:Response) => {
+  console.log("Registering User with Data:", data);
   if (!data) {
     throw new CustomError("input datas not found", 404);
   }
@@ -27,13 +28,14 @@ export const registerUser = async (data: any , res:Response) => {
     throw new CustomError("password encryption failed", 404);
   }
   const newUser = new User({
-    name: data.name,
+    name: data.firstname + " " + data.lastname,
     email: data.email,
     password: passwordHash,
-    profile: data.profile,
+    profile: data.profile ||"",
     age: data.age,
     phone: data.phone,
   });
+  console.log("Saving New User:", newUser); 
   await newUser.save();
 
   const token =  generateToken(newUser._id)
@@ -87,8 +89,13 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
   }
 
   const token = generateToken(userExist._id.toString()); // Convert ObjectId to string
+  const refreshToken = generateRefreshToken(userExist._id.toString())
 
   res.cookie("token",token,{
+    httpOnly: true,
+    secure: false,
+  })
+  res.cookie("refreshToken",refreshToken,{
     httpOnly: true,
     secure: false,
   })

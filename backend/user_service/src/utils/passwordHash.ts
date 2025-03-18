@@ -1,10 +1,9 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 export const hashPassword = (password: string) => {
   return bcrypt.hash(password, 10);
 };
 
 export const comparePassword = (plainPassword: string, hashedPassword: string ) => {
-  console.log("plain",plainPassword , "hashed", hashedPassword)
   return bcrypt.compare(plainPassword, hashedPassword);
 };

@@ -35,7 +35,7 @@ export const profilePictureController = async (req: AuthenticatedRequest, res: R
             data: result,
         });
     }
-}
+
 
 export const getAllUsers = async (req:Request , res:Response) => {
     const allUsers = await User.find()

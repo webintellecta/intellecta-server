@@ -3,10 +3,11 @@ import mongoose, { Schema, Document } from "mongoose";
 interface IAssessment extends Document {
   userId: mongoose.Types.ObjectId;
   totalQuestions: number;
-    correctCount: number;
-    scorePercentage: number;
-    strengths: string[]; 
-    weaknesses: string[]; 
+  correctCount: number;
+  scorePercentage: number;
+  strengths: string[]; 
+  weaknesses: string[]; 
+  aiFeedback: string;
 }
 
 const AssessmentSchema: Schema = new Schema(
@@ -35,6 +36,9 @@ const AssessmentSchema: Schema = new Schema(
       type: [String], 
       default: [] 
     },
+    aiFeedback: {
+      type: String, 
+    }
   },
   { timestamps: true }
 );

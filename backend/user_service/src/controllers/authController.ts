@@ -51,6 +51,8 @@ export const userChangePassword = async (req: Request, res: Response) => {
   return res.status(200).json({ message: "password changed" });
 };
 
+
+
 //forgot-password & reset-password
 export const forgotPassword = async (req: Request, res: Response) => {
   const userId = req.params.id;

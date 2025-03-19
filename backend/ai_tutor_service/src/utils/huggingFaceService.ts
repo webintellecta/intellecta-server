@@ -20,7 +20,6 @@ export const getAiTutorResponse = async (userResponses: any): Promise<string[]> 
                 },
             }
         );
-        console.log("API Response:", response.data);
         return response.data;
     } catch (error) {
         console.error("Error generating questions:", error);

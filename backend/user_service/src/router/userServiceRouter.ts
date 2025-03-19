@@ -9,7 +9,7 @@ import {
   userRegistration,
 } from "../controllers/authController";
 import { asyncHandler } from "../middleware/asyncHandler";
-import { getUserById, profilePictureController } from "../controllers/userController";
+import { getUserById, profilePictureController, getAllUsers } from "../controllers/userController";
 import { isAuthenticate } from "../middleware/isAuth";
 import {upload} from "../middleware/profilePicUploader"
 
@@ -29,6 +29,8 @@ userServiceRouter.get(
   isAuthenticate,
   asyncHandler(getUserById)
 );
+
+userServiceRouter.get("/getAllUsers", asyncHandler(getAllUsers))
 
 //forgot-password
 userServiceRouter.post("/forgotpassword/:id", asyncHandler(forgotPassword));

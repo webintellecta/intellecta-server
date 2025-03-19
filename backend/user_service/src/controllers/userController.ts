@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getUserByIdService, profilePictureService } from "../service/userFucntionService";
 import CustomError from "../utils/customErrorHandler";
+import User from "../models/userModel";
 
 export const getUserById = async (req:Request , res:Response) => {
     const userId = req.params.id
@@ -34,3 +35,12 @@ export const profilePictureController = async (req: AuthenticatedRequest, res: R
             data: result,
         });
     }
+}
+
+export const getAllUsers = async (req:Request , res:Response) => {
+    const allUsers = await User.find()
+    if(!allUsers){
+        throw new CustomError("user data not found",404)
+    }
+    return res.status(200).json({message:"fetch  done", data:allUsers})
+}

@@ -5,7 +5,7 @@ services:
     build: ./user_service
     container_name: user-service
     ports:
-      - "4586:4586"
+      - "4587:4587"
     depends_on:
       - rabbitmq
       - mongodb
@@ -33,7 +33,7 @@ services:
     build: ./ai_tutor_service
     container_name: ai-tutor-service
     ports:
-      - "6000:6000"
+      - "5003:5003"
     depends_on:
       - rabbitmq
       - mongodb

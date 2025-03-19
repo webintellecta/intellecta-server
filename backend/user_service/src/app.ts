@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import userServiceRouter from "./router/userServiceRouter";
 import { errorHandler } from "./middleware/errorHandler";
 import cookieParser from "cookie-parser";
+import cors from 'cors'
 
 dotenv.config();
 
@@ -13,17 +14,9 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser())
+app.use(cors())
 
 app.use('/api/user',userServiceRouter)
-
-
-
-
-
-
-
-
-
 
 
 

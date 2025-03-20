@@ -1,13 +1,14 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IUser extends Document {
+  _id: mongoose.Types.ObjectId;
   name: string;
   email: string;
   password: string;
   age: Number,
-  phone: string,
+  phone?: string,
   role: "student" | "parent" | "teacher" | "admin";
-  profilePic?: string;
+  profilePic?: string | null;
   // refreshToken: string;
 }
 
@@ -26,12 +27,10 @@ const UserSchema: Schema = new Schema(
     },
     password: { 
         type: String, 
-        required: true,
         select: false
     },
     age: {
         type: Number,
-        required: true ,
         min:5,
         max:18
     },

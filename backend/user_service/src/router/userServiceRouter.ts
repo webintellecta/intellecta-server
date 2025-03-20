@@ -10,7 +10,9 @@ import {
   googleAuth,
 } from "../controllers/authController";
 import { asyncHandler } from "../middleware/asyncHandler";
+
 import { getUserById, profilePictureController, userEditController } from "../controllers/userController";
+
 import { isAuthenticate } from "../middleware/isAuth";
 import {upload} from "../middleware/profilePicUploader"
 
@@ -23,6 +25,8 @@ userServiceRouter.post("/google-login", asyncHandler(googleAuth));
 
 userServiceRouter.patch("/changepassword",isAuthenticate, asyncHandler(userChangePassword));
 userServiceRouter.get("/getuserbyid", isAuthenticate, asyncHandler(getUserById));
+
+userServiceRouter.get("/getAllUsers", asyncHandler(getAllUsers))
 
 //forgot-password
 userServiceRouter.post("/forgotpassword/:id", asyncHandler(forgotPassword));

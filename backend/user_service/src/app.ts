@@ -1,9 +1,9 @@
 import express, { NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
-import cors from "cors";
 import userServiceRouter from "./router/userServiceRouter";
 import { errorHandler } from "./middleware/errorHandler";
 import cookieParser from "cookie-parser";
+import cors from 'cors'
 
 dotenv.config();
 
@@ -16,9 +16,9 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser())
+app.use(cors())
 
-
-app.use('/api/user', userServiceRouter)
+app.use('/api/user',userServiceRouter)
 
 
 

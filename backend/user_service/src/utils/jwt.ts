@@ -1,7 +1,6 @@
 import Jwt, { JwtPayload } from "jsonwebtoken";
 import CustomError from "./customErrorHandler";
 
-// const TokenSecret = process.env.TOKEN_SECRET;
 
 export const generateToken = (userId: string | unknown): string => {
   if (!process.env.TOKEN_SECRET) {
@@ -16,6 +15,8 @@ export const generateToken = (userId: string | unknown): string => {
   });
 };
 
+
+//generaterefreshtoken
 export const generateRefreshToken = (userId: string | unknown): string => {
   console.log("generating token", process.env.REFRESH_TOKEN_SECRET);
   if (!process.env.REFRESH_TOKEN_SECRET) {

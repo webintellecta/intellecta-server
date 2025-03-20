@@ -26,7 +26,6 @@ userServiceRouter.post("/google-login", asyncHandler(googleAuth));
 userServiceRouter.patch("/changepassword",isAuthenticate, asyncHandler(userChangePassword));
 userServiceRouter.get("/getuserbyid", isAuthenticate, asyncHandler(getUserById));
 
-userServiceRouter.get("/getAllUsers", asyncHandler(getAllUsers))
 
 //forgot-password
 userServiceRouter.post("/forgotpassword/:id", asyncHandler(forgotPassword));

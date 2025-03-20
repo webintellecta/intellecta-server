@@ -13,10 +13,11 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { hashPassword } from "../utils/passwordHash";
 import { generateToken, verifyToken } from "../utils/jwt";
+import { googleAuthentication } from "../service/authService";
 
 dotenv.config();
 
-//registeration
+//registration
 export const userRegistration = async (req: Request, res: Response) => {
   console.log("incoming", req.body);
   const data = await registerUser(req.body, res);
@@ -37,6 +38,14 @@ export const userLogin = async (req: Request, res: Response) => {
   return res.status(200).json({ message: "user logged in", data: loginData });
 };
 
+//google login
+export const googleAuth = async (req: Request, res: Response) => {
+  const response = await googleAuthentication(req.body, res);
+  console.log(response)
+  res.status(200).json({ status: "success", message: "Successfully logged in with Google", data: response });
+};
+
+
 //logout
 export const userLogout = async (req: Request, res: Response) => {
   const userData = await logOutUserService(req.body, res);
@@ -52,6 +61,8 @@ export const userChangePassword = async (req: Request, res: Response) => {
   const changePsswdData = await changePasswordService(userId, req.body);
   return res.status(200).json({ message: "password changed" });
 };
+
+
 
 //forgot-password & reset-password
 export const forgotPassword = async (req: Request, res: Response) => {

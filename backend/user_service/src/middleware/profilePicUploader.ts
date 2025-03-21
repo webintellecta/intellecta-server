@@ -75,5 +75,3 @@ export const generatePresignedUrl = async (key: string): Promise<string | null> 
     }
 };
 
-// Export functions
-// export { upload, uploadToS3, generatePresignedUrl };

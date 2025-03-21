@@ -1,14 +1,16 @@
-
+version: '3.8' # Optional but recommended for clarity
 
 services:
   user-service:
     build: ./user_service
     container_name: user-service
     ports:
-      - "4586:4586"
+      - "5000:5000"
     depends_on:
-      - rabbitmq
-      - mongodb
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
     networks:
       - intellecta-network
     env_file:
@@ -33,71 +35,17 @@ services:
     build: ./ai_tutor_service
     container_name: ai-tutor-service
     ports:
-      - "6000:6000"
+      - "5001:5001"
     depends_on:
-      - rabbitmq
-      - mongodb
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
     networks:
       - intellecta-network
     env_file:
       - .env
     restart: always
-
-  # qa-bot-service:
-  #   build: ./qa-bot-service
-  #   container_name: qa-bot-service
-  #   ports:
-  #     - "5004:5004"
-  #   depends_on:
-  #     - rabbitmq
-  #     - mongodb
-  #   networks:
-  #     - intellecta-network
-  #   env_file:
-  #     - .env
-  #   restart: always
-
-  # insight-service:
-  #   build: ./insight-service
-  #   container_name: insight-service
-  #   ports:
-  #     - "5005:5005"
-  #   depends_on:
-  #     - rabbitmq
-  #     - mongodb
-  #   networks:
-  #     - intellecta-network
-  #   env_file:
-  #     - .env
-  #   restart: always
-
-  # content-service:
-  #   build: ./content-service
-  #   container_name: content-service
-  #   ports:
-  #     - "5006:5006"
-  #   depends_on:
-  #     - rabbitmq
-  #     - mongodb
-  #   networks:
-  #     - intellecta-network
-  #   env_file:
-  #     - .env
-  #   restart: always
-
-  # notification-service:
-  #   build: ./notification-service
-  #   container_name: notification-service
-  #   ports:
-  #     - "5007:5007"
-  #   depends_on:
-  #     - rabbitmq
-  #     - mongodb
-  #   networks:
-  #     - intellecta-network
-  #   env_file:
-  #     - .env
-  #   restart: always
 
   rabbitmq:
     image: "rabbitmq:3-management"
@@ -111,6 +59,11 @@ services:
     networks:
       - intellecta-network
     restart: always
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongodb:
     image: mongo

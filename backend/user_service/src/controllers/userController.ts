@@ -1,13 +1,21 @@
 import { Request, Response } from "express";
-import { getUserByIdService, profilePictureService } from "../service/userFucntionService";
+import { getUserByIdService, profilePictureService, userEditService  } from "../service/userService";
 import CustomError from "../utils/customErrorHandler";
+import { publishToQueue } from "../utils/rabbitmq";
+import User from "../models/userModel";
 
+//Get User
 export const getUserById = async (req:Request , res:Response) => {
-    const userId = req.params.id
+    const userId = req.user?.userId;
     if(!userId){
         throw new CustomError("user not found",404)
     }
     const userData = await getUserByIdService(userId)
+
+    
+    // Publish event to RabbitMQ when user is fetched
+    await publishToQueue("user_fetched", userData);
+
     return res.status(200).json({success:true, message:userData.message, data:userData})
 }
 
@@ -34,3 +42,26 @@ export const profilePictureController = async (req: AuthenticatedRequest, res: R
             data: result,
         });
     }
+
+//Edit User
+export const userEditController = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+        const userId = req.user?.userId; 
+
+        if (!userId) {
+            return res.status(400).json({ status: "error", message: "User ID is required" });
+        }
+
+        console.log("Authenticated user ID:", userId);
+        console.log("Received user update request:", req.body);
+
+        const response = await userEditService(userId, req.body);
+
+        console.log("Updated User Data:", response);
+
+        return res.status(200).json({
+            status: "success",
+            message: "User updated successfully",
+            data: response,
+        });
+    }
+

@@ -4,6 +4,7 @@ import CustomError from "../utils/customErrorHandler";
 import { generateRefreshToken, generateToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/passwordHash";
 import { JwtPayload } from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
 
 
 //user register
@@ -69,15 +70,17 @@ interface LoginResponse {
 
 // Type your User model (assuming it’s defined elsewhere)
 export interface IUser extends Document {
+  _id: import("mongoose").Types.ObjectId;
   name: string;
   email: string;
   password: string;
   age: number;
-  _id: import("mongoose").Types.ObjectId;
+  save(): Promise<IUser>;
 }
 
 export const loginUserService = async (data: LoginData , res:Response): Promise<LoginResponse> => {
   const userExist = await User.findOne({ email: data.email }).select("password") as IUser | null;
+  console.log("Registering User with Data:", data);
   if (!userExist) {
       throw new CustomError("User not found, please register", 404);
   }
@@ -90,14 +93,19 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
 
   const token = generateToken(userExist._id.toString()); // Convert ObjectId to string
   const refreshToken = generateRefreshToken(userExist._id.toString())
+  console.log("token ",token)
 
   res.cookie("token",token,{
     httpOnly: true,
     secure: false,
+    maxAge: 24 * 60 * 60 * 60 * 1000,
+    // sameSite:"none"
   })
   res.cookie("refreshToken",refreshToken,{
     httpOnly: true,
     secure: false,
+    maxAge: 24 * 60 * 60 * 60 * 1000,
+    // sameSite:"none"
   })
   return {
       message: "User logged in", // Fixed typo: "loggined" → "logged in"
@@ -111,11 +119,86 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
 };
 
 
+//google login
+interface GoogleAuthData { credential: string; }
+
+interface GoogleAuthResponse {
+  message: string;
+  token: string;
+  user: {
+      id: string;
+      name: string;
+      email: string;
+  };
+}
+
+export const googleAuthentication = async (data: GoogleAuthData, res: Response) : Promise<GoogleAuthResponse> => {
+  if(!data.credential){
+    throw new CustomError("No Google credentials provided!", 400);
+  }
+  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+  // Verify Google token
+  const ticket = await client.verifyIdToken({
+      idToken: data.credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  // Get payload from verified token
+  const payload = ticket.getPayload();
+  console.log("object payload",payload);
+    if(!payload || !payload.email || !payload.name){
+    throw new CustomError("Google Authentication Failed", 400); // 400 for bad request
+  }
+
+  let user  = await User.findOne({ email: payload.email });
+
+  // If user doesn't exist, create a new user
+  if (!user) {
+      user = new User({
+          name: payload.name,
+          email: payload.email,
+          password: '',
+          profilePic: payload.picture, 
+      });
+      await user.save();
+  }
+
+  if (!user._id) {
+    throw new CustomError("User ID not found", 500);
+  }
+
+
+  // Generate token for the user
+  const token = generateToken(user._id.toString());
+
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: false, // Change to true in production with HTTPS
+  });
+
+  return {
+      message: "User logged in via Google",
+      token,
+      user: {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+      },
+  };
+};
+
+
 export const logOutUserService = async(data:any , res:Response)=>{
   res.clearCookie("token",{
-    httpOnly: true, // Match the settings from login
+      httpOnly: true,
       secure: false,
   })
+  res.clearCookie("refreshToken",{
+      httpOnly: true,
+      secure: false,
+  })
+  
   return {message:"user logged out"}
 }
 

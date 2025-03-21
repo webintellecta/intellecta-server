@@ -7,8 +7,9 @@ async function startConsumer() {
     await consumeFromQueue("user_fetched", async (data) => {
       console.log("AI Tutor Service received user_fetched event:", data);
 
-      if (data?.userId) {
-        userCache.set(data.userId, data); // Cache user data
+      if (data?.user) {
+        userCache.set(data?.user._id, data.user);
+        // console.log("Updated userCache:", userCache); // Cache user data
     }
     });
   }

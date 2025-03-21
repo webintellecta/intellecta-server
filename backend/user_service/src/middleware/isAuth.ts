@@ -1,17 +1,15 @@
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, {JwtPayload} from "jsonwebtoken";
 import CustomError from "../utils/customErrorHandler";
+
+
 //verifying the token
-
-
-interface DecodedToken {
-    [key: string]: any;
-  }
-  
-  interface CustomRequest extends Request {
-    user?: DecodedToken;
-  }
-
+// interface DecodedToken {
+//     [key: string]: any;
+//   }
+interface CustomRequest extends Request {
+  user?: { userId: string }; 
+}
 
 export const isAuthenticate = async (
   req: CustomRequest,
@@ -20,17 +18,21 @@ export const isAuthenticate = async (
 ) => {
     const token = req.cookies.token
     if(!token){
-        throw new CustomError("token is not exist in the cookie", token)
+        return next(new CustomError("Token does not exist in the cookie", 401))
     }
     try{
-      const decoded =jwt.verify(token, process.env.TOKEN_SECRET as string)
-      req.user = decoded as DecodedToken
+      const decoded =jwt.verify(token, process.env.TOKEN_SECRET as string) as JwtPayload;
+      console.log("decoded",decoded); // for debugging purposes
+
+      // ✅ Ensure `decoded` contains `userId`
+      if (typeof decoded === "string" || !decoded._id) {
+          return next(new CustomError("Invalid token payload", 401));
+      }
+    
+      req.user = { userId: decoded._id };
       next()
     }
     catch(err){
       return next(new CustomError(`Invalid or expired token ${err}`, 401));
-    }
-    
-
-       
+    }     
 };

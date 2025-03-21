@@ -4,6 +4,7 @@ import { determineUserLevel } from "../utils/userLevel";
 import CustomError from "../utils/customError";
 import { getAiTutorResponse } from "../utils/huggingFaceService";
 import { Document } from "mongoose";
+import Assessment from "../models/assessmentModel";
 
 interface QuestionDocument extends Document {
     _id: string;
@@ -16,7 +17,7 @@ export const getAssessmentQuesService = async (userId?: string) => {
         throw new CustomError("Unauthorized: No user ID found", 401);
     }
 
-    const userServiceUrl = `${process.env.USER_SERVICE_URL}/${userId}`;
+    const userServiceUrl = `${process.env.USER_SERVICE_URL}`;
     const userResponse = await axios.get(userServiceUrl);
 
     if (userResponse.status !== 200) {
@@ -63,6 +64,17 @@ export const evaluateAssessmentService = async( data: any) => {
         weaknesses
     };
     const aiFeedback = await getAiTutorResponse(assessmentResult);
-    return { assessmentResult, aiFeedback };
+    let cleanedFeedback = aiFeedback[0]?.generated_text || "No feedback available";
+    if (cleanedFeedback.includes("Strengths")) {
+        cleanedFeedback = cleanedFeedback.substring(cleanedFeedback.indexOf("Strengths"));
+    }
+
+    
+    const savedAssessment = await Assessment.create({
+        ...assessmentResult,
+        aiFeedback: cleanedFeedback
+    });
+
+    return { assessmentResult: savedAssessment };
 
 }

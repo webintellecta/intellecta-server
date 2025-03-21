@@ -5,26 +5,26 @@ import CustomError from "../utils/customError";
 import { getAiTutorResponse } from "../utils/huggingFaceService";
 import { Document } from "mongoose";
 import Assessment from "../models/assessmentModel";
+import { userCache } from "../consumers/userConsumer";
 
 interface QuestionDocument extends Document {
     _id: string;
     subject: string;
     correctAnswer: string;
 }
-
+    console.log("userData-outSide",userCache)
 export const getAssessmentQuesService = async (userId?: string) => {
     if (!userId) {
         throw new CustomError("Unauthorized: No user ID found", 401);
     }
 
-    const userServiceUrl = `${process.env.USER_SERVICE_URL}`;
-    const userResponse = await axios.get(userServiceUrl);
-
-    if (userResponse.status !== 200) {
-        throw new CustomError("Failed to fetch user details", 400);
+    const userData = userCache.get(userId);
+    if (!userData) {
+        throw new CustomError("User data not found. Try again later.", 400);
     }
 
-    const { age } = userResponse.data.data.user;
+    console.log("userData",userData)
+    const { age } = userData;
     const level = determineUserLevel(age);
 
     const questions = await AssessmentQuestion.find({ difficulty: level }).limit(10).lean();

@@ -17,6 +17,20 @@ services:
       - .env
     restart: always
 
+  game-service:
+    build: ./game_service
+    container_name: game-service
+    ports:
+      - "5002:5002"
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    restart: always
+
   ai-tutor-service:
     build: ./ai_tutor_service
     container_name: ai-tutor-service

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getUserByIdService, profilePictureService, userEditService  } from "../service/userService";
 import CustomError from "../utils/customErrorHandler";
+import { publishToQueue } from "../utils/rabbitmq";
 import User from "../models/userModel";
 
 //Get User
@@ -10,6 +11,11 @@ export const getUserById = async (req:Request , res:Response) => {
         throw new CustomError("user not found",404)
     }
     const userData = await getUserByIdService(userId)
+
+    
+    // Publish event to RabbitMQ when user is fetched
+    await publishToQueue("user_fetched", userData);
+
     return res.status(200).json({success:true, message:userData.message, data:userData})
 }
 

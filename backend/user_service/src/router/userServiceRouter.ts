@@ -23,7 +23,7 @@ userServiceRouter.patch(
   asyncHandler(userChangePassword)
 );
 userServiceRouter.get(
-  "/getuserbyid:id",
+  "/:id",
   isAuthenticate,
   asyncHandler(getUserById)
 );

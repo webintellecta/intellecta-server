@@ -1,4 +1,4 @@
-version: '3.8' # Optional but recommended for clarity
+version: '3.8'
 
 services:
   user-service:
@@ -15,7 +15,12 @@ services:
       - intellecta-network
     env_file:
       - .env
-    restart: always
+      #new code 
+    volumes:
+      - ./user_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
 
   game-service:
     build: ./game_service
@@ -45,7 +50,11 @@ services:
       - intellecta-network
     env_file:
       - .env
-    restart: always
+    volumes:
+      - ./ai_tutor_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
 
   rabbitmq:
     image: "rabbitmq:3-management"
@@ -58,7 +67,7 @@ services:
       RABBITMQ_DEFAULT_PASS: "password"
     networks:
       - intellecta-network
-    restart: always
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
@@ -72,7 +81,7 @@ services:
       - "27017:27017"
     networks:
       - intellecta-network
-    restart: always
+    restart: unless-stopped
     volumes:
       - mongodb-data:/data/db
 

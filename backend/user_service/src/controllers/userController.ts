@@ -15,7 +15,7 @@ export const getUserById = async (req:Request , res:Response) => {
 
     
     // Publish event to RabbitMQ when user is fetched
-    await publishToQueue("user_fetched", userData);
+    
 
     return res.status(200).json({success:true, message:userData.message, data:userData})
 }

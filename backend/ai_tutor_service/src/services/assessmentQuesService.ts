@@ -6,13 +6,13 @@ import { getAiTutorResponse } from "../utils/huggingFaceService";
 import { Document } from "mongoose";
 import Assessment from "../models/assessmentModel";
 import { userCache } from "../consumers/userConsumer";
-
+console.log("userData-outSide",userCache)
 interface QuestionDocument extends Document {
     _id: string;
     subject: string;
     correctAnswer: string;
 }
-    console.log("userData-outSide",userCache)
+    
 export const getAssessmentQuesService = async (userId?: string) => {
     if (!userId) {
         throw new CustomError("Unauthorized: No user ID found", 401);

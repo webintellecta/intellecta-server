@@ -20,7 +20,6 @@ dotenv.config();
 
 //registration
 export const userRegistration = async (req: Request, res: Response) => {
-  console.log("incoming", req.body);
   const data = await registerUser(req.body, res);
   console.log("object", data);
   if (!data) {
@@ -35,6 +34,7 @@ export const userRegistration = async (req: Request, res: Response) => {
 
 //login
 export const userLogin = async (req: Request, res: Response) => {
+  console.log("req.body", req.body)
   const loginData = await loginUserService(req.body, res);
   await publishToQueue("user_fetched", loginData);
   return res.status(200).json({ message: "user logged in", data: loginData });
@@ -164,7 +164,5 @@ export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
   if(!accessToken){
     throw new CustomError("access token generation failed", 404)
   }
-
-
   return res.status(200).json({ message: "Access token generated", accessToken })
 };

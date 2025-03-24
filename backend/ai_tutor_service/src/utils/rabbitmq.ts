@@ -47,7 +47,7 @@ export async function consumeFromQueue(queue: string, callback: (message: any) =
     channel.consume(queue, (msg: ConsumeMessage | null) => {
       if (msg) {
         const data = JSON.parse(msg.content.toString());
-        console.log(`📩 Received message:`, data);
+        // console.log(`📩 Received message:`, data);
         callback(data);
         channel?.ack(msg);
       }

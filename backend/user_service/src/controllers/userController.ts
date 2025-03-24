@@ -7,6 +7,7 @@ import User from "../models/userModel";
 //Get User
 export const getUserById = async (req:Request , res:Response) => {
     const userId = req.user?.userId;
+    console.log(userId)
     if(!userId){
         throw new CustomError("user not found",404)
     }

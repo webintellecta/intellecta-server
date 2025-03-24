@@ -13,6 +13,7 @@
   "description": "",
   "dependencies": {
     "@aws-sdk/s3-request-presigner": "^3.758.0",
+    "amqplib": "^0.10.5",
     "aws-sdk": "^2.1692.0",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
@@ -28,16 +29,17 @@
     "nodemailer": "^6.10.0"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.7",
     "@types/aws-sdk": "^0.0.42",
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
+    "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/mongoose": "^5.11.97",
     "@types/multer": "^1.4.12",
-    "@types/node": "^22.13.10",
+    "@types/node": "^22.13.13",
     "@types/nodemailer": "^6.4.17",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",

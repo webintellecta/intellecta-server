@@ -17,7 +17,8 @@ COPY . .
 RUN npm run build
 
 # Expose the port the service runs on
-EXPOSE 5001
+EXPOSE 5002
 
 # Start the service using compiled JavaScript
 CMD ["node", "dist/server.js"]
+

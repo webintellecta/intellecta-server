@@ -11,12 +11,12 @@ interface AITutorResponse {
   }
   
 
-export const getAiTutorResponse = async (userResponses: any): Promise<AITutorResponse[]> => {
+export const getAiTutorResponse = async (aiPrompt: string): Promise<AITutorResponse[]> => {
     try {
         const response = await axios.post(
             MODEL_URL,
             {
-                inputs: `Assess this user's learning level and suggest a personalized learning path: ${JSON.stringify(userResponses)}`,
+                inputs: aiPrompt
             },
             {
                 headers: {
@@ -25,6 +25,7 @@ export const getAiTutorResponse = async (userResponses: any): Promise<AITutorRes
                 },
             }
         );
+        console.log('response', response.data)
         return response.data;
     } catch (error) {
         console.error("Error generating questions:", error);

@@ -4,6 +4,7 @@ import CustomError from "./customErrorHandler";
 
 export const generateToken = (userId: string | unknown): string => {
   if (!process.env.TOKEN_SECRET) {
+    console.log("within if", process.env.TOKEN_SECRET)
     throw new CustomError(
       "token secret is not defined in the environment variables",
       404
@@ -17,9 +18,10 @@ export const generateToken = (userId: string | unknown): string => {
 
 //generaterefreshtoken
 export const generateRefreshToken = (userId: string | unknown): string => {
+  console.log("generating token", process.env.REFRESH_TOKEN_SECRET);
   if (!process.env.REFRESH_TOKEN_SECRET) {
     throw new CustomError(
-      "token secret is not defined in the environment variables",
+      "refresh token is not defined in the environment variables",
       404
     );
   }

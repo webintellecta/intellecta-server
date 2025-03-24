@@ -13,10 +13,12 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { hashPassword } from "../utils/passwordHash";
 import { generateToken, verifyToken } from "../utils/jwt";
+import { googleAuthentication } from "../service/authService";
+import { publishToQueue } from "../utils/rabbitmq";
 
 dotenv.config();
 
-//registeration
+//registration
 export const userRegistration = async (req: Request, res: Response) => {
   console.log("incoming", req.body);
   const data = await registerUser(req.body, res);
@@ -34,8 +36,18 @@ export const userRegistration = async (req: Request, res: Response) => {
 //login
 export const userLogin = async (req: Request, res: Response) => {
   const loginData = await loginUserService(req.body, res);
+  await publishToQueue("user_fetched", loginData);
   return res.status(200).json({ message: "user logged in", data: loginData });
 };
+
+//google login
+export const googleAuth = async (req: Request, res: Response) => {
+  const response = await googleAuthentication(req.body, res);
+  await publishToQueue("user_fetched", response);
+  console.log(response)
+  res.status(200).json({ status: "success", message: "Successfully logged in with Google", data: response });
+};
+
 
 //logout
 export const userLogout = async (req: Request, res: Response) => {

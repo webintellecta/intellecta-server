@@ -9,7 +9,7 @@ async function startConsumer() {
 
       if (data?.user) {
         userCache.set(data.user.id, data.user.id);
-        console.log("Updated userCache:", userCache); // Cache user data
+        // console.log("Updated userCache:", userCache); // Cache user data
     }
     });
   }

@@ -99,19 +99,17 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
     httpOnly: true,
     secure: false,
     maxAge: 24 * 60 * 60 * 60 * 1000,
-    // sameSite:"none"
   })
   res.cookie("refreshToken",refreshToken,{
     httpOnly: true,
     secure: false,
     maxAge: 24 * 60 * 60 * 60 * 1000,
-    // sameSite:"none"
   })
   return {
-      message: "User logged in", // Fixed typo: "loggined" → "logged in"
-      token, // No .toString() needed
+      message: "User logged in", 
+      token, 
       user: {
-          id: userExist._id.toString(), // Convert to string for consistency
+          id: userExist._id.toString(),
           name: userExist.name,
           email: userExist.email,
       },
@@ -171,11 +169,21 @@ export const googleAuthentication = async (data: GoogleAuthData, res: Response) 
 
   // Generate token for the user
   const token = generateToken(user._id.toString());
+  const refreshToken = generateRefreshToken(user._id.toString())
+  console.log("token ",token)
 
-  res.cookie("token", token, {
+  res.cookie("token",token,{
     httpOnly: true,
-    secure: false, // Change to true in production with HTTPS
-  });
+    secure: false,
+    maxAge: 24 * 60 * 60 * 60 * 1000,
+    // sameSite:"none"
+  })
+  res.cookie("refreshToken",refreshToken,{
+    httpOnly: true,
+    secure: false,
+    maxAge: 24 * 60 * 60 * 60 * 1000,
+    // sameSite:"none"
+  })
 
   return {
       message: "User logged in via Google",

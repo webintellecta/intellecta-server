@@ -30,5 +30,5 @@ export const getAiTutorResponse = async (aiPrompt: string): Promise<AITutorRespo
     } catch (error) {
         console.error("Error generating questions:", error);
         throw new Error("Failed to generate questions");
-    }
+    }    
 };

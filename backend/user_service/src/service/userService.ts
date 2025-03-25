@@ -9,7 +9,6 @@ export const getUserByIdService = async(userId:string | undefined | JwtPayload) 
     if(!specificUser){
         throw new CustomError("user not found", 404)
     }
-    console.log("object", specificUser.profilePic);
     if (specificUser.profilePic !== null && specificUser.profilePic !== undefined) {
         specificUser.profilePic = await generatePresignedUrl(specificUser.profilePic);
       }

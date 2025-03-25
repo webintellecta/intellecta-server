@@ -27,10 +27,7 @@ export const profilePictureService = async (userId: string, file: Express.Multer
         throw new CustomError("User ID is required", 400);
     }
 
-    // Upload image to S3 and get URL
     const fileUrl: string = await uploadToS3(file);
-
-    // ✅ Update user profile picture in database
     const user = await User.findByIdAndUpdate(userId, { profilePic: fileUrl }, { new: true });
 
     if (!user) {

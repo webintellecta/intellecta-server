@@ -8,13 +8,15 @@ async function startConsumer() {
       console.log("AI Tutor Service received user_fetched event:", data);
 
       if (data?.user) {
-        userCache.set(data.user.id, data.user.id);
-        // console.log("Updated userCache:", userCache); // Cache user data
+        userCache.set(data.user.id, {
+                id: data.user.id,
+                age: data.age 
+        });     
     }
     });
   }
   
   startConsumer().catch((err) => console.error("Failed to start consumer:", err));
-  console.log("Server is running on port 5000");
+  console.log("Server is running on port 5001");
 
   export { userCache };

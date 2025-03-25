@@ -18,7 +18,6 @@ app.use(
 app.use(express.json());
 app.use(cookieParser())
 
-
 app.use("/api/assessment", assessmentRoutes);
 
 const errorHandlerMiddleware: ErrorRequestHandler = (err, req, res, next) => {

@@ -6,6 +6,7 @@ import { getAiTutorResponse } from "../utils/huggingFaceService";
 import { Document } from "mongoose";
 import Assessment from "../models/assessmentModel";
 import { userCache } from "../consumers/userConsumer";
+import { parse } from 'json5';
 console.log("userData-outSide",userCache)
 interface QuestionDocument extends Document {
     _id: string;
@@ -29,109 +30,120 @@ export const getAssessmentQuesService = async (userId?: string) => {
     return { userId, age, level, questions };
 };
 
-// First, define the type for AITutorResponse if not already defined
-interface AITutorResponse {
-    generated_text?: string;
-    [key: string]: any;
-}
-
 export const evaluateAssessmentService = async(data: any) => {
     const { userId, answers } = data;
     if (!userId || !answers || !Array.isArray(answers)) {
-        throw new CustomError("Invalid input data" , 400);
+        throw new CustomError("Invalid input data", 400);
     }
-
+    
+    // Get all the questions that were answered
     const questionIds = answers.map(a => a._id);
     const questions: QuestionDocument[] = await AssessmentQuestion.find({ _id: { $in: questionIds } });
     
+    // Calculate basic scores
     let correctCount = 0;
-    let totalQuestions = questions.length;
     let subjectScores: Record<string, number> = {};
     
-    answers.forEach(userAnswer => {
-        const question = questions.find(q => q._id.toString() === userAnswer._id);
-        if (question) {
-            const isCorrect = question.correctAnswer === userAnswer.selectedOption;
-            if (isCorrect) correctCount++;
-            subjectScores[question.subject] = (subjectScores[question.subject] || 0) + (isCorrect ? 1 : 0);
+    // Initialize all subjects with 0 score
+    questions.forEach(question => {
+        if (!subjectScores[question.subject]) {
+            subjectScores[question.subject] = 0;
         }
     });
     
-    const scorePercentage = (correctCount / totalQuestions) * 100;
-    let strengths = Object.keys(subjectScores).filter(subj => subjectScores[subj] >= 2);
-    let weaknesses = Object.keys(subjectScores).filter(subj => subjectScores[subj] < 2);
+    // Count correct answers
+    answers.forEach(userAnswer => {
+        const question = questions.find(q => q._id.toString() === userAnswer._id);
+        if (question && question.correctAnswer === userAnswer.selectedOption) {
+            correctCount++;
+            subjectScores[question.subject] += 1;
+        }
+    });
     
+    const totalQuestions = questions.length;
+    const scorePercentage = (correctCount / totalQuestions) * 100;
+    
+    // Determine strengths and weaknesses
+    const allSubjects = Object.keys(subjectScores);
+    const strengthThreshold = 2;
+    
+    let strengths = allSubjects.filter(subj => subjectScores[subj] >= strengthThreshold);
+    let weaknesses = allSubjects.filter(subj => subjectScores[subj] < strengthThreshold);
+    
+    // Create the basic assessment result
     const assessmentResult = {
         userId,
         totalQuestions,
         correctCount,
         scorePercentage,
         strengths,
-        weaknesses
+        weaknesses,
+        subjectScores
     };
     
-    const aiPrompt = `Assess this user's learning level and suggest a personalized learning path: ${JSON.stringify(assessmentResult)}`;
-    const rawAiResponse: AITutorResponse[] = await getAiTutorResponse(aiPrompt);
-
-    // Parse the AI response dynamically
-    let parsedAiResponse: any;
-    try {
-        // Extract the first generated_text if it's an array
-        const responseText = Array.isArray(rawAiResponse) 
-            ? rawAiResponse[0]?.generated_text || JSON.stringify(rawAiResponse)
-            : rawAiResponse as string;
-
-        // Use a more flexible regex that works with es2015+
-        const jsonMatch = responseText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/);
-        
-        if (jsonMatch) {
-            parsedAiResponse = JSON.parse(jsonMatch[0]);
-        } else {
-            // Fallback parsing if direct JSON extraction fails
-            parsedAiResponse = {
-                originalResponse: responseText,
-                learningPath: extractLearningPath(responseText)
-            };
-        }
-    } catch (error) {
-        parsedAiResponse = {
-            originalResponse: JSON.stringify(rawAiResponse),
-            error: 'Failed to parse AI response'
+    // Create a simple, structured prompt for the AI
+    const aiPrompt = `Based on the user's assessment results ${assessmentResult}, generate a structured personalizedLearningPlan. The plan should include multiple learning steps such as 'concept', 'practice', 'assessment', or 'enhancement'. Each entry should include: subject name (e.g., Coding - Variables, Data Types, Arrays), step (concept, practice, assessment, or enhancement), description (brief explanation of the step), relevantActions (if applicable), and learningResources (tutorials, videos, exercises, or quizzes). Ensure your response uses these exact field names and is formatted as valid JSON.`;
+    
+    // Get AI response
+    const aiFeedback = await getAiTutorResponse(aiPrompt);
+    
+    // Process the AI response to extract and format the personalized learning plan
+        const personalizedLearningPlan = parseAiLearningPlanResponse(aiFeedback);
+        const assessmentData = {
+            ...assessmentResult,
+            personalizedLearningPlan
         };
+
+
+        const savedAssessment = await Assessment.create(assessmentData);
+
+        return { 
+            assessmentResult: savedAssessment, 
+            rawAiResponse: aiFeedback 
+        }
+}
+
+
+export function parseAiLearningPlanResponse(rawResponse: any): any[] {
+    // Check if rawResponse is an array and has at least one element
+    if (!Array.isArray(rawResponse) || rawResponse.length === 0) {
+        console.error('Invalid AI response structure');
+        return [];
     }
 
-    const savedAssessment = await Assessment.create({
-        ...assessmentResult,
-        rawAiResponse: JSON.stringify(parsedAiResponse)
-    });
+    const responseText = rawResponse[0]?.generated_text || '';
 
-    return { 
-        assessmentResult: savedAssessment, 
-        rawAiResponse: parsedAiResponse 
-    };
-};
-
-// Helper function to extract learning path if full JSON parsing fails
-function extractLearningPath(response: string): string {
-    // Regex without 's' and 'i' flags
-    const learningPathRegex = /learning\s*path\s*:?\s*([\s\S]*?)(?=\n\n|\n|$)/;
+    // Extract JSON using regex, allowing for more flexible parsing
+    const jsonMatch = responseText.match(/```json\n([\s\S]*?)```/);
     
-    const match = response.match(learningPathRegex);
-    
-    // Case-insensitive manual matching
-    if (!match) {
-        const lowerResponse = response.toLowerCase();
-        const learningPathIndex = lowerResponse.indexOf('learning path');
-        
-        if (learningPathIndex !== -1) {
-            const extractedPath = response.substring(learningPathIndex + 'learning path'.length)
-                .replace(/^:\s*/, '')  // Remove colon and leading spaces
-                .split(/\n\n/)[0]  // Take first paragraph
-                .trim();
-            
-            return extractedPath || 'No specific learning path found';
+    if (!jsonMatch) {
+        // Fallback to direct parsing if no code block found
+        try {
+            return parse(responseText);
+        } catch (directParseError) {
+            console.error('Failed to parse AI response:', directParseError);
+            return [];
         }
     }
-    
-    return match ? match[1].trim() : 'No specific learning path found';
+
+    try {
+        // Use json5 for more lenient parsing
+        const parsedLearningPlan = parse(jsonMatch[1]);
+
+        // Normalize the learning plan structure
+        return parsedLearningPlan.map((item: { subjectName: any; subject: any; step: any; description: any; relevantActions: any; learningResources: { [s: string]: unknown; } | ArrayLike<unknown>; }) => ({
+            subject: item.subjectName || item.subject || 'Unknown Subject',
+            step: item.step || 'concept',
+            description: item.description || '',
+            actions: Array.isArray(item.relevantActions) 
+                ? item.relevantActions 
+                : (item.relevantActions ? [item.relevantActions] : []),
+            resources: Array.isArray(item.learningResources) 
+                ? item.learningResources 
+                : (item.learningResources ? Object.values(item.learningResources).flat() : [])
+        }));
+    } catch (parseError) {
+        console.error('Error parsing learning plan:', parseError);
+        return [];
+    }
 }

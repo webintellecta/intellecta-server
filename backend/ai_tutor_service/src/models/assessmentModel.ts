@@ -1,10 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-interface IPersonalizedRecommendation {
-  subject: string;
-  actions: string[];
-  resources: string[];
-}
 
 interface IAssessment extends Document {
   userId: mongoose.Types.ObjectId;
@@ -13,8 +8,8 @@ interface IAssessment extends Document {
   scorePercentage: number;
   strengths: string[]; 
   weaknesses: string[]; 
-  learningPath: string[];
-  personalizedRecommendations: IPersonalizedRecommendation[];
+  aiResponse?: string; 
+
 }
 
 const AssessmentSchema: Schema = new Schema(
@@ -43,18 +38,11 @@ const AssessmentSchema: Schema = new Schema(
       type: [String], 
       default: [] 
     },
-    learningPath: {
-      type: [String],
-      default: []
-    },
-    personalizedRecommendations: {
-      type: [{
-        subject: String,
-        action: [String],
-        resources: [String]
-      }],
-      default: []
+    aiResponse: {
+      type: String,
+      default: null
     }
+   
   },
   { timestamps: true }
 );

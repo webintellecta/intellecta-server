@@ -18,9 +18,10 @@ export const getAssessmentQuestions = async (req: AuthRequest, res: Response ): 
 };
 
 export const evaluateAssessment = async( req: Request, res: Response) => {
-  const { assessmentResult } = await evaluateAssessmentService(req.body);
+  const { assessmentResult, rawAiResponse } = await evaluateAssessmentService(req.body);
   res.status(200).json({
     message: "Assessment evaluated successfully",
-    assessmentResult 
+    assessmentResult,
+    rawAiResponse
   })
 };

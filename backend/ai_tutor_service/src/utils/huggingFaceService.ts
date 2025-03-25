@@ -8,6 +8,7 @@ const MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral
 
 interface AITutorResponse {
     generated_text: string;
+    [key: string]: any;
   }
   
 

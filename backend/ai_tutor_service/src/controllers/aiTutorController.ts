@@ -12,20 +12,20 @@ export const generateSyllabus = async (req: AuthRequest, res: Response) => {
       createdAt: -1,
     });
 
-    if (!userAssessment || !userAssessment.learningPath) {
+    if (!userAssessment || !userAssessment.aiResponse) {
       return res
         .status(404)
         .json({ message: "Learning path not found for this user" });
     }
 
     // Extract relevant data from the user's assessment
-    const { learningPath, strengths, weaknesses } = userAssessment;
+    const { aiResponse,strengths, weaknesses } = userAssessment;
 
     // AI Prompt with Personalized Learning Context
     const aiPrompt = `
       Generate a structured syllabus tailored to the user's needs.
       
-      Learning Path: ${JSON.stringify(learningPath)}
+      Learning Path: ${JSON.stringify(aiResponse)}
       Strengths: ${JSON.stringify(strengths)}
       Weaknesses: ${JSON.stringify(weaknesses)}
 
@@ -47,7 +47,7 @@ export const generateSyllabus = async (req: AuthRequest, res: Response) => {
     `;
 
     // AI API Request
-    const aiResponse = await getAiTutorResponse(aiPrompt);
+    const aiFeedback = await getAiTutorResponse(aiPrompt);
 
     const syllabus = extractCompleteSyllabus(aiResponse);
 

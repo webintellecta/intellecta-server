@@ -36,7 +36,6 @@ export const registerUser = async (data: any , res:Response) => {
     age: data.age,
     phone: data.phone,
   });
-  console.log("Saving New User:", newUser); 
   await newUser.save();
 
   const token =  generateToken(newUser._id)
@@ -65,6 +64,7 @@ interface LoginResponse {
       id: string;
       name: string;
       email: string;
+      age: number;
   };
 }
 
@@ -79,8 +79,8 @@ export interface IUser extends Document {
 }
 
 export const loginUserService = async (data: LoginData , res:Response): Promise<LoginResponse> => {
-  const userExist = await User.findOne({ email: data.email }).select("password") as IUser | null;
-  console.log("Registering User with Data:", data);
+  const userExist = await User.findOne({ email: data.email }).select("password age") as IUser | null;
+  console.log("userhsuhi", userExist)
   if (!userExist) {
       throw new CustomError("User not found, please register", 404);
   }
@@ -93,7 +93,6 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
 
   const token = generateToken(userExist._id.toString()); // Convert ObjectId to string
   const refreshToken = generateRefreshToken(userExist._id.toString())
-  console.log("token ",token)
 
   res.cookie("token",token,{
     httpOnly: true,
@@ -112,6 +111,7 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
           id: userExist._id.toString(),
           name: userExist.name,
           email: userExist.email,
+          age: userExist.age
       },
   };
 };
@@ -144,7 +144,6 @@ export const googleAuthentication = async (data: GoogleAuthData, res: Response) 
 
   // Get payload from verified token
   const payload = ticket.getPayload();
-  console.log("object payload",payload);
     if(!payload || !payload.email || !payload.name){
     throw new CustomError("Google Authentication Failed", 400); // 400 for bad request
   }

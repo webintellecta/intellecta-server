@@ -23,7 +23,7 @@ export const getUserById = async (req:Request , res:Response) => {
 
 
 interface AuthenticatedRequest extends Request {
-    user?: { userId: string }; // Ensures `req.user` contains `userId`
+    user?: { userId: string }; 
 }
 
 export const profilePictureController = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {

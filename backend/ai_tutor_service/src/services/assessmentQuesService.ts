@@ -3,7 +3,7 @@ import AssessmentQuestion from "../models/questionModel";
 import { determineUserLevel } from "../utils/userLevel";
 import CustomError from "../utils/customError";
 import { Document } from "mongoose";
-// import Assessment from "../models/assessmentModel";
+import Assessment from "../models/assessmentModel";
 import { userCache } from "../consumers/userConsumer";
 import { generateLearningPath } from "../utils/geminiService";
 
@@ -138,10 +138,19 @@ export const evaluateAssessmentService = async(data: any) => {
         console.error('Failed to parse AI response:', error);
         throw new CustomError('Invalid AI response format', 500);
     }
-    const savedAssessment = {
-        ...assessmentResult,
+    const savedAssessment = new Assessment({
+        userId,
+        totalQuestions,
+        correctCount,
+        scorePercentage,
+        strengths,
+        weaknesses,
+        subjectScores,
         aiResponse: parsedAiResponse,
-    };
+    });
+
+    await savedAssessment.save();
+
 
     return { assessmentResult: savedAssessment };
 }

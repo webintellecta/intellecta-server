@@ -1,13 +1,12 @@
-import axios from "axios";
+
 import AssessmentQuestion from "../models/questionModel";
 import { determineUserLevel } from "../utils/userLevel";
 import CustomError from "../utils/customError";
-import { getAiTutorResponse } from "../utils/huggingFaceService";
 import { Document } from "mongoose";
-import Assessment from "../models/assessmentModel";
+// import Assessment from "../models/assessmentModel";
 import { userCache } from "../consumers/userConsumer";
-import { parse } from 'json5';
-console.log("userData-outSide",userCache)
+import { generateLearningPath } from "../utils/geminiService";
+
 interface QuestionDocument extends Document {
     _id: string;
     subject: string;
@@ -35,22 +34,22 @@ export const evaluateAssessmentService = async(data: any) => {
     if (!userId || !answers || !Array.isArray(answers)) {
         throw new CustomError("Invalid input data", 400);
     }
-    
+
     // Get all the questions that were answered
     const questionIds = answers.map(a => a._id);
     const questions: QuestionDocument[] = await AssessmentQuestion.find({ _id: { $in: questionIds } });
-    
+
     // Calculate basic scores
     let correctCount = 0;
     let subjectScores: Record<string, number> = {};
-    
+
     // Initialize all subjects with 0 score
     questions.forEach(question => {
         if (!subjectScores[question.subject]) {
             subjectScores[question.subject] = 0;
         }
     });
-    
+
     // Count correct answers
     answers.forEach(userAnswer => {
         const question = questions.find(q => q._id.toString() === userAnswer._id);
@@ -59,17 +58,17 @@ export const evaluateAssessmentService = async(data: any) => {
             subjectScores[question.subject] += 1;
         }
     });
-    
+
     const totalQuestions = questions.length;
     const scorePercentage = (correctCount / totalQuestions) * 100;
-    
+
     // Determine strengths and weaknesses
     const allSubjects = Object.keys(subjectScores);
     const strengthThreshold = 2;
-    
+
     let strengths = allSubjects.filter(subj => subjectScores[subj] >= strengthThreshold);
     let weaknesses = allSubjects.filter(subj => subjectScores[subj] < strengthThreshold);
-    
+
     // Create the basic assessment result
     const assessmentResult = {
         userId,
@@ -80,70 +79,69 @@ export const evaluateAssessmentService = async(data: any) => {
         weaknesses,
         subjectScores
     };
+
+    const prompt = `
+    Create a personalized learning roadmap for a student aged 5-18 based on the assessment results:
+    ${JSON.stringify(assessmentResult)}
     
-    // Create a simple, structured prompt for the AI
-    const aiPrompt = `Based on the user's assessment results ${assessmentResult}, generate a structured personalizedLearningPlan. The plan should include multiple learning steps such as 'concept', 'practice', 'assessment', or 'enhancement'. Each entry should include: subject name (e.g., Coding - Variables, Data Types, Arrays), step (concept, practice, assessment, or enhancement), description (brief explanation of the step), relevantActions (if applicable), and learningResources (tutorials, videos, exercises, or quizzes). Ensure your response uses these exact field names and is formatted as valid JSON.`;
-    
-    // Get AI response
-    const aiFeedback = await getAiTutorResponse(aiPrompt);
-    
-    // Process the AI response to extract and format the personalized learning plan
-        const personalizedLearningPlan = parseAiLearningPlanResponse(aiFeedback);
-        const assessmentData = {
-            ...assessmentResult,
-            personalizedLearningPlan
-        };
-
-
-        const savedAssessment = await Assessment.create(assessmentData);
-
-        return { 
-            assessmentResult: savedAssessment, 
-            rawAiResponse: aiFeedback 
-        }
-}
-
-
-export function parseAiLearningPlanResponse(rawResponse: any): any[] {
-    // Check if rawResponse is an array and has at least one element
-    if (!Array.isArray(rawResponse) || rawResponse.length === 0) {
-        console.error('Invalid AI response structure');
-        return [];
+    Generate a JSON with:
+    {
+        "learningPaths": [
+            {
+                "subject": "Science/Coding/Math/History/English",
+                "currentLevel": "beginner/intermediate/advanced",
+                "learningGoals": [
+                    "Primary learning objective",
+                    "Secondary learning objective"
+                ],
+                "resources": [
+                    {
+                        "type": "course/video/project",
+                        "title": "Resource name",
+                        "difficulty": "beginner/intermediate/advanced",
+                        "link": "platform-resource-link"
+                    }
+                ]
+            }
+        ],
+        "nextSteps": [
+            "First learning recommendation",
+            "Follow-up recommendation"
+        ],
+        "motivationalNote": "Encouraging message for the student"
     }
-
-    const responseText = rawResponse[0]?.generated_text || '';
-
-    // Extract JSON using regex, allowing for more flexible parsing
-    const jsonMatch = responseText.match(/```json\n([\s\S]*?)```/);
     
-    if (!jsonMatch) {
-        // Fallback to direct parsing if no code block found
-        try {
-            return parse(responseText);
-        } catch (directParseError) {
-            console.error('Failed to parse AI response:', directParseError);
-            return [];
-        }
-    }
+    Key Requirements:
+    - Personalized and engaging
+    - Practical learning resources
+    - Clear, actionable learning path
+    `;
 
+    const aiResponse = await generateLearningPath(prompt);
+
+    // Parse the JSON response
+    let parsedAiResponse;
     try {
-        // Use json5 for more lenient parsing
-        const parsedLearningPlan = parse(jsonMatch[1]);
-
-        // Normalize the learning plan structure
-        return parsedLearningPlan.map((item: { subjectName: any; subject: any; step: any; description: any; relevantActions: any; learningResources: { [s: string]: unknown; } | ArrayLike<unknown>; }) => ({
-            subject: item.subjectName || item.subject || 'Unknown Subject',
-            step: item.step || 'concept',
-            description: item.description || '',
-            actions: Array.isArray(item.relevantActions) 
-                ? item.relevantActions 
-                : (item.relevantActions ? [item.relevantActions] : []),
-            resources: Array.isArray(item.learningResources) 
-                ? item.learningResources 
-                : (item.learningResources ? Object.values(item.learningResources).flat() : [])
-        }));
-    } catch (parseError) {
-        console.error('Error parsing learning plan:', parseError);
-        return [];
+        // Remove any code block markers and trim
+        const cleanedResponse = aiResponse
+            .replace(/```json?/g, '')
+            .replace(/```/g, '')
+            .trim();
+        
+        parsedAiResponse = JSON.parse(cleanedResponse);
+    
+        // Optional: More detailed validation
+        if (!Array.isArray(parsedAiResponse.learningPaths) || parsedAiResponse.learningPaths.length === 0) {
+            throw new Error('No learning paths found');
+        }
+    } catch (error) {
+        console.error('Failed to parse AI response:', error);
+        throw new CustomError('Invalid AI response format', 500);
     }
+    const savedAssessment = {
+        ...assessmentResult,
+        aiResponse: parsedAiResponse,
+    };
+
+    return { assessmentResult: savedAssessment };
 }

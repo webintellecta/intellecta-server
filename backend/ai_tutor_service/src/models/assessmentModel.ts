@@ -6,6 +6,12 @@ interface IAssessment extends Document {
   totalQuestions: number;
   correctCount: number;
   scorePercentage: number;
+   subjectScores?: {
+    [subject: string]: {
+
+      correctAnswers: number;
+    }
+  };
   strengths: string[]; 
   weaknesses: string[]; 
   aiResponse?: string; 

@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import Assessment from "../models/assessmentModel";
-import { getAiTutorResponse } from "../utils/huggingFaceService";
 
 interface AuthRequest extends Request {
   user?: { _id: string };
@@ -47,7 +46,7 @@ export const generateSyllabus = async (req: AuthRequest, res: Response) => {
     `;
 
     // AI API Request
-    const aiFeedback = await getAiTutorResponse(aiPrompt);
+    const aiFeedback = aiPrompt;
 
     const syllabus = extractCompleteSyllabus(aiResponse);
 

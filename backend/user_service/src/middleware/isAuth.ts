@@ -22,9 +22,7 @@ export const isAuthenticate = async (
     }
     try{
       const decoded =jwt.verify(token, process.env.TOKEN_SECRET as string) as JwtPayload;
-      console.log("decoded",decoded); // for debugging purposes
 
-      // ✅ Ensure `decoded` contains `userId`
       if (typeof decoded === "string" || !decoded._id) {
           return next(new CustomError("Invalid token payload", 401));
       }

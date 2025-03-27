@@ -48,6 +48,8 @@ export const getAssessmentQuesService = async (userId?: string) => {
 
 export const evaluateAssessmentService = async(data: any) => {
     const { userId, answers } = data;
+    console.log("ffff", data);
+    
     if (!userId || !answers || !Array.isArray(answers)) {
         throw new CustomError("Invalid input data", 400);
     }

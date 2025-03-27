@@ -5,27 +5,50 @@ import CustomError from "../utils/customError";
 import { getAiTutorResponse } from "../utils/huggingFaceService";
 import { Document } from "mongoose";
 import Assessment from "../models/assessmentModel";
-import { userCache } from "../consumers/userConsumer";
-console.log("userData-outSide",userCache)
+import { getUserData } from "../consumers/userConsumer";
+import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
+
+console.log("userData-outSide",getUserData)
+
 interface QuestionDocument extends Document {
     _id: string;
     subject: string;
     correctAnswer: string; 
     
 }
+
+interface UserData {
+    _id: string;
+    name: string;
+    email: string;
+    age: number;
+    phone: string;
+    role: string;
+    profilePic: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
     
 export const getAssessmentQuesService = async (userId?: string) => {
     if (!userId) {
         throw new CustomError("Unauthorized: No user ID found", 401);
     }
+    await publishToQueue("user_id", userId);
 
-    const userData = userCache.get(userId);
+    let userData = (await getUserData(userId)) as UserData | undefined;
+
     if (!userData) {
         throw new CustomError("User data not found. Try again later.", 400);
     }
-
+    
     console.log("userData",userData)
-    const { age } = userData;
+
+    if (userData instanceof Map) {
+        userData = Object.fromEntries(userData) as UserData;
+    }
+    const  age  = userData.age;
+
     const level = determineUserLevel(age);
 
     const questions = await AssessmentQuestion.find({ difficulty: level }).limit(10).lean();

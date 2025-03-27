@@ -6,6 +6,7 @@ import User from "../models/userModel";
 
 //Get User
 export const getUserById = async (req:Request , res:Response) => {
+    // console.log("currentUserId", currentUserId)
     const userId = req.user?.userId;
     console.log(userId)
     if(!userId){
@@ -15,8 +16,6 @@ export const getUserById = async (req:Request , res:Response) => {
 
     
     // Publish event to RabbitMQ when user is fetched
-    await publishToQueue("user_fetched", userData.user);
-
 
     return res.status(200).json({success:true, message:userData.message, data:userData})
 }

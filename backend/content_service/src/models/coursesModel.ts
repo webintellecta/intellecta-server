@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 interface ICourse extends Document {
     title: string;
+    subject: string;
     description: string;
     lessons: string[];
 }
@@ -12,15 +13,14 @@ const CourseSchema: Schema = new Schema(
         type: String,
         required: true, 
     },
+    subject: {
+      type: String,
+      required: true
+    },
     description: {
         type: String,
         required: true, 
     },
-    modules: [{
-        type: Schema.Types.ObjectId,
-        ref: "Lesson",
-        required: true,
-    }],
   },
   { timestamps: true }
 );

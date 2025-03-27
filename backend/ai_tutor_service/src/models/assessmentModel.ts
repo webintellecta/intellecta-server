@@ -1,14 +1,55 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+interface IResource {
+  type: string;
+  title: string;
+  difficulty: string;
+  link: string;
+}
+
+interface ILearningPath {
+  subject: string;
+  currentLevel: string;
+  learningGoals: string[];
+  resources: IResource[];
+}
+
+interface IAIResponse {
+  learningPaths: ILearningPath[];
+  nextSteps: string[];
+  motivationalNote: string;
+}
+
 interface IAssessment extends Document {
   userId: mongoose.Types.ObjectId;
   totalQuestions: number;
   correctCount: number;
   scorePercentage: number;
+  subjectScores: Map<string, number>;
   strengths: string[]; 
   weaknesses: string[]; 
-  aiFeedback: string;
+  aiResponse?: IAIResponse;
 }
+
+const ResourceSchema: Schema = new Schema({
+  type: { type: String, required: true },
+  title: { type: String, required: true },
+  difficulty: { type: String, required: true },
+  link: { type: String, required: true }
+});
+
+const LearningPathSchema: Schema = new Schema({
+  subject: { type: String, required: true },
+  currentLevel: { type: String, required: true },
+  learningGoals: { type: [String], required: true },
+  resources: { type: [ResourceSchema], required: true }
+});
+
+const AIResponseSchema: Schema = new Schema({
+  learningPaths: { type: [LearningPathSchema], required: true },
+  nextSteps: { type: [String], required: true },
+  motivationalNote: { type: String, required: true }
+});
 
 const AssessmentSchema: Schema = new Schema(
   {
@@ -28,6 +69,10 @@ const AssessmentSchema: Schema = new Schema(
       type: Number, 
       required: true 
     },
+    subjectScores: { 
+      type: Map, of: Number, 
+      default: {} 
+    }, 
     strengths: { 
       type: [String], 
       default: [] 
@@ -36,9 +81,11 @@ const AssessmentSchema: Schema = new Schema(
       type: [String], 
       default: [] 
     },
-    aiFeedback: {
-      type: String, 
+    aiResponse: { 
+      type: AIResponseSchema, 
+      default: null 
     }
+   
   },
   { timestamps: true }
 );

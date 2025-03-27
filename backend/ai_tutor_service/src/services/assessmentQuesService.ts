@@ -4,8 +4,14 @@ import { determineUserLevel } from "../utils/userLevel";
 import CustomError from "../utils/customError";
 import { Document } from "mongoose";
 import Assessment from "../models/assessmentModel";
-import { userCache } from "../consumers/userConsumer";
+
+import { getUserData } from "../consumers/userConsumer";
+import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
+
+console.log("userData-outSide",getUserData)
+
 import { generateLearningPath } from "../utils/geminiService";
+
 
 interface QuestionDocument extends Document {
     _id: string;
@@ -13,17 +19,41 @@ interface QuestionDocument extends Document {
     correctAnswer: string; 
     
 }
+
+interface UserData {
+    _id: string;
+    name: string;
+    email: string;
+    age: number;
+    phone: string;
+    role: string;
+    profilePic: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
     
 export const getAssessmentQuesService = async (userId?: string) => {
     if (!userId) {
         throw new CustomError("Unauthorized: No user ID found", 401);
     }
+    await publishToQueue("user_id", userId);
 
-    const userData = userCache.get(userId);
+    let userData = (await getUserData(userId)) as UserData | undefined;
+
     if (!userData) {
         throw new CustomError("User data not found. Try again later.", 400);
     }
-    const age  = userData.age;
+
+    
+    console.log("userData",userData)
+
+    if (userData instanceof Map) {
+        userData = Object.fromEntries(userData) as UserData;
+    }
+    const  age  = userData.age;
+
+
     const level = determineUserLevel(age);
     const questions = await AssessmentQuestion.find({ difficulty: level }).limit(15).lean();
     return { userId, age, level, questions };

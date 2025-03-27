@@ -32,19 +32,19 @@ export const getAssessmentQuesService = async (userId?: string) => {
 
 export const evaluateAssessmentService = async(data: any) => {
     const { userId, answers } = data;
+    console.log("ffff", data);
+    
     if (!userId || !answers || !Array.isArray(answers)) {
         throw new CustomError("Invalid input data", 400);
     }
     
-    // Get all the questions that were answered
+    
     const questionIds = answers.map(a => a._id);
     const questions: QuestionDocument[] = await AssessmentQuestion.find({ _id: { $in: questionIds } });
     
-    // Calculate basic scores
     let correctCount = 0;
     let subjectScores: Record<string, number> = {};
     
-    // Initialize all subjects with 0 score
     questions.forEach(question => {
         if (!subjectScores[question.subject]) {
             subjectScores[question.subject] = 0;

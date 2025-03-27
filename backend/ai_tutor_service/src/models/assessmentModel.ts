@@ -9,7 +9,6 @@ interface IAssessment extends Document {
   strengths: string[]; 
   weaknesses: string[]; 
   aiResponse?: string; 
-
 }
 
 const AssessmentSchema: Schema = new Schema(

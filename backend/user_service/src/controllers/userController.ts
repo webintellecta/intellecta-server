@@ -22,7 +22,7 @@ export const profilePictureController = async (req: AuthenticatedRequest, res: R
         throw new CustomError("User ID is required", 400);
     }
     const result = await profilePictureService(userId, req.file as Express.Multer.File);
-    res.status(200).json({
+    return res.status(200).json({
         status: "success",
         message: "Uploaded Successfully",
         data: result,

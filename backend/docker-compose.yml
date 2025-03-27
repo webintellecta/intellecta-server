@@ -56,6 +56,27 @@ services:
     command: npm run dev  # Runs nodemon for hot-reloading
     restart: unless-stopped
 
+  content_service:
+    build: ./content_service
+    container_name: content_service
+    ports:
+      - "5005:5005"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./content_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+
+
   ai-chatbot-service:
     build: ./ai_chatbot_service
     container_name: ai-chatbot-service

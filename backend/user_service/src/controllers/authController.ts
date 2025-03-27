@@ -1,28 +1,19 @@
 import { NextFunction, Request, Response } from "express";
-import {
-  changePasswordService,
-  loginUserService,
-  logOutUserService,
-  registerUser,
-} from "../service/authService";
+import {changePasswordService,loginUserService,logOutUserService,registerUser,} from "../service/authService";
 import CustomError from "../utils/customErrorHandler";
 import User from "../models/userModel";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
-
 import dotenv from "dotenv";
 import { hashPassword } from "../utils/passwordHash";
 import { generateToken, verifyToken } from "../utils/jwt";
 import { googleAuthentication } from "../service/authService";
-import { publishToQueue } from "../utils/rabbitmq";
 
 dotenv.config();
 
 //registration
 export const userRegistration = async (req: Request, res: Response) => {
-  console.log("incoming", req.body);
   const data = await registerUser(req.body, res);
-  console.log("object", data);
   if (!data) {
     throw new CustomError("registration failed", 404);
   }
@@ -36,17 +27,21 @@ export const userRegistration = async (req: Request, res: Response) => {
 //login
 export const userLogin = async (req: Request, res: Response) => {
   const loginData = await loginUserService(req.body, res);
+<<<<<<< HEAD
   const user = await User.findById(loginData.user.id);
   console.log("User data before publishing:", user);
   await publishToQueue("user_fetched", user);
   console.log("User published to queue");
 
+=======
+>>>>>>> upstream/dev
   return res.status(200).json({ message: "user logged in", data: loginData });
 };
 
 //google login
 export const googleAuth = async (req: Request, res: Response) => {
   const response = await googleAuthentication(req.body, res);
+<<<<<<< HEAD
   await publishToQueue("user_fetched", response);
   console.log(response);
   res
@@ -56,6 +51,9 @@ export const googleAuth = async (req: Request, res: Response) => {
       message: "Successfully logged in with Google",
       data: response,
     });
+=======
+  res.status(200).json({ status: "success", message: "Successfully logged in with Google", data: response });
+>>>>>>> upstream/dev
 };
 
 //logout
@@ -81,13 +79,11 @@ export const forgotPassword = async (req: Request, res: Response) => {
   if (!currentUser?.email || !currentUser?.password) {
     throw new CustomError("user not found", 404);
   }
-  console.log("email", currentUser.email);
 
   const secret = process.env.TOKEN_SECRET + currentUser.password;
   if (!secret) {
     throw new CustomError("token not found", 404);
   }
-  console.log("this controller is working");
   const token = jwt.sign({ id: currentUser._id }, secret, { expiresIn: "1h" });
   const resetURL = `http://localhost:4586/api/user/resetPassword?id=${userId}&token=${token}`;
 
@@ -112,8 +108,6 @@ export const forgotPassword = async (req: Request, res: Response) => {
   return res.status(200).json({ message: "Password reset link sent" });
 };
 
-// =========================================
-
 export const resetPassword = async (
   req: Request,
   res: Response,
@@ -126,7 +120,6 @@ export const resetPassword = async (
   }
   const strToken = token.toString();
   const user = await User.findById(id).select("password");
-  console.log("user", user);
   if (!user) {
     return res.status(400).json({ message: "User not exists!" });
   }
@@ -145,13 +138,10 @@ export const resetPassword = async (
   );
 
   await user.save();
-
   res.status(200).json({ message: "Password has been reset" });
 };
 
-// ===============================================================
 //refresh token to access token
-
 export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
@@ -171,8 +161,12 @@ export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
   if (!accessToken) {
     throw new CustomError("access token generation failed", 404);
   }
+<<<<<<< HEAD
 
   return res
     .status(200)
     .json({ message: "Access token generated", accessToken });
+=======
+  return res.status(200).json({ message: "Access token generated", accessToken })
+>>>>>>> upstream/dev
 };

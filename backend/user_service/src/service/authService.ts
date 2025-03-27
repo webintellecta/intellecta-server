@@ -9,7 +9,6 @@ import { OAuth2Client } from "google-auth-library";
 
 //user register
 export const registerUser = async (data: any , res:Response) => {
-  console.log("Registering User with Data:", data);
   if (!data) {
     throw new CustomError("input datas not found", 404);
   }
@@ -36,7 +35,6 @@ export const registerUser = async (data: any , res:Response) => {
     age: data.age,
     phone: data.phone,
   });
-  console.log("Saving New User:", newUser); 
   await newUser.save();
 
   const token =  generateToken(newUser._id)
@@ -47,9 +45,6 @@ export const registerUser = async (data: any , res:Response) => {
 
   return { message: "user registered successfully", token:token };
 };
-
-
-
 
 //login
 interface LoginData {
@@ -68,56 +63,49 @@ interface LoginResponse {
   };
 }
 
-// Type your User model (assuming it’s defined elsewhere)
 export interface IUser extends Document {
   _id: import("mongoose").Types.ObjectId;
   name: string;
   email: string;
   password: string;
-  age: number;
   save(): Promise<IUser>;
 }
 
 export const loginUserService = async (data: LoginData , res:Response): Promise<LoginResponse> => {
   const userExist = await User.findOne({ email: data.email }).select("password") as IUser | null;
-  console.log("Registering User with Data:", data);
   if (!userExist) {
-      throw new CustomError("User not found, please register", 404);
+    throw new CustomError("User not found, please register", 404);
   }
 
   const validateUser = await comparePassword(data.password, userExist.password);
 
   if (!validateUser) {
-      throw new CustomError("Incorrect password", 401); // 401 for unauthorized
+    throw new CustomError("Incorrect password", 401); // 401 for unauthorized
   }
 
   const token = generateToken(userExist._id.toString()); // Convert ObjectId to string
   const refreshToken = generateRefreshToken(userExist._id.toString())
-  console.log("token ",token)
 
   res.cookie("token",token,{
     httpOnly: true,
     secure: false,
     maxAge: 24 * 60 * 60 * 60 * 1000,
-    // sameSite:"none"
   })
   res.cookie("refreshToken",refreshToken,{
     httpOnly: true,
     secure: false,
     maxAge: 24 * 60 * 60 * 60 * 1000,
-    // sameSite:"none"
   })
   return {
-      message: "User logged in", // Fixed typo: "loggined" → "logged in"
-      token, // No .toString() needed
+      message: "User logged in", 
+      token, 
       user: {
-          id: userExist._id.toString(), // Convert to string for consistency
+          id: userExist._id.toString(),
           name: userExist.name,
-          email: userExist.email,
+          email: userExist.email
       },
   };
 };
-
 
 //google login
 interface GoogleAuthData { credential: string; }
@@ -138,52 +126,54 @@ export const googleAuthentication = async (data: GoogleAuthData, res: Response) 
   }
   const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-  // Verify Google token
   const ticket = await client.verifyIdToken({
       idToken: data.credential,
       audience: process.env.GOOGLE_CLIENT_ID,
   });
 
-  // Get payload from verified token
   const payload = ticket.getPayload();
-  console.log("object payload",payload);
     if(!payload || !payload.email || !payload.name){
-    throw new CustomError("Google Authentication Failed", 400); // 400 for bad request
+    throw new CustomError("Google Authentication Failed", 400); 
   }
 
   let user  = await User.findOne({ email: payload.email });
-
-  // If user doesn't exist, create a new user
   if (!user) {
-      user = new User({
-          name: payload.name,
-          email: payload.email,
-          password: '',
-          profilePic: payload.picture, 
-      });
-      await user.save();
+    user = new User({
+      name: payload.name,
+      email: payload.email,
+      password: '',
+      profilePic: payload.picture, 
+    });
+  await user.save();
   }
 
   if (!user._id) {
     throw new CustomError("User ID not found", 500);
   }
 
-
-  // Generate token for the user
   const token = generateToken(user._id.toString());
+  const refreshToken = generateRefreshToken(user._id.toString())
 
-  res.cookie("token", token, {
+  res.cookie("token",token,{
     httpOnly: true,
-    secure: false, // Change to true in production with HTTPS
-  });
+    secure: false,
+    maxAge: 24 * 60 * 60 * 60 * 1000,
+    // sameSite:"none"
+  })
+  res.cookie("refreshToken",refreshToken,{
+    httpOnly: true,
+    secure: false,
+    maxAge: 24 * 60 * 60 * 60 * 1000,
+    // sameSite:"none"
+  })
 
   return {
       message: "User logged in via Google",
       token,
       user: {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email
       },
   };
 };

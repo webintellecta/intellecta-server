@@ -4,6 +4,7 @@ const userCache = new Map<string, any>();
 
 async function startConsumer() {
     console.log("Initializing RabbitMQ consumer...");
+  
     await consumeFromQueue("userData", async (data) => {
         if (data) {
             userCache.set(data._id, data);

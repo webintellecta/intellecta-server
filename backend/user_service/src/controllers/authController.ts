@@ -20,9 +20,7 @@ dotenv.config();
 
 //registration
 export const userRegistration = async (req: Request, res: Response) => {
-  console.log("incoming", req.body);
   const data = await registerUser(req.body, res);
-  console.log("object", data);
   if (!data) {
     throw new CustomError("registration failed", 404);
   }
@@ -36,7 +34,12 @@ export const userRegistration = async (req: Request, res: Response) => {
 //login
 export const userLogin = async (req: Request, res: Response) => {
   const loginData = await loginUserService(req.body, res);
-  // await publishToQueue("user_fetched", loginData);
+
+  const queuePayload = {
+    ...loginData,
+    age: loginData.user.age
+  };
+
   return res.status(200).json({ message: "user logged in", data: loginData });
 };
 
@@ -74,7 +77,6 @@ export const forgotPassword = async (req: Request, res: Response) => {
   if (!currentUser?.email || !currentUser?.password) {
     throw new CustomError("user not found", 404);
   }
-  console.log("email", currentUser.email);
 
   const secret = process.env.TOKEN_SECRET + currentUser.password;
   if (!secret) {

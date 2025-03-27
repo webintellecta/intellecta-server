@@ -10,4 +10,6 @@ assessmentRouter.get("/questions", authMiddleware, asyncErrorHandler ( getAssess
 assessmentRouter.post("/evaluate", authMiddleware, asyncErrorHandler ( evaluateAssessment ));
 assessmentRouter.get("/syllabus", authMiddleware, asyncErrorHandler ( generateSyllabus ));
 
+
+
 export default assessmentRouter;

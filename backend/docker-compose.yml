@@ -34,7 +34,11 @@ services:
       - intellecta-network
     env_file:
       - .env
-    restart: always
+    volumes:
+      - ./game_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
 
   ai-tutor-service:
     build: ./ai_tutor_service
@@ -52,6 +56,26 @@ services:
       - .env
     volumes:
       - ./ai_tutor_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+
+  ai-chatbot-service:
+    build: ./ai_chatbot_service
+    container_name: ai-chatbot-service
+    ports:
+      - "5004:5004"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./ai_chatbot_service:/app
       - /app/node_modules  # Prevents overwriting node_modules
     command: npm run dev  # Runs nodemon for hot-reloading
     restart: unless-stopped

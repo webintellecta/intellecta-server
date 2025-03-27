@@ -66,3 +66,11 @@ export const userEditController = async (req: AuthenticatedRequest, res: Respons
         });
     }
 
+
+//bulk users 
+export const getBulkUsers = async (req:Request, res:Response) :Promise<Response> => {
+    const { userIds } = req.body;
+    const users = await User.find({ _id: { $in: userIds } }, "_id name profilePic");    
+    return res.json(users);
+  };
+  

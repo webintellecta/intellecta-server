@@ -36,7 +36,11 @@ export const userRegistration = async (req: Request, res: Response) => {
 //login
 export const userLogin = async (req: Request, res: Response) => {
   const loginData = await loginUserService(req.body, res);
-  await publishToQueue("user_fetched", loginData);
+  const user = await User.findById(loginData.user.id);
+  console.log("User data before publishing:", user);
+  await publishToQueue("user_fetched", user);
+  console.log("User published to queue");
+
   return res.status(200).json({ message: "user logged in", data: loginData });
 };
 
@@ -44,10 +48,15 @@ export const userLogin = async (req: Request, res: Response) => {
 export const googleAuth = async (req: Request, res: Response) => {
   const response = await googleAuthentication(req.body, res);
   await publishToQueue("user_fetched", response);
-  console.log(response)
-  res.status(200).json({ status: "success", message: "Successfully logged in with Google", data: response });
+  console.log(response);
+  res
+    .status(200)
+    .json({
+      status: "success",
+      message: "Successfully logged in with Google",
+      data: response,
+    });
 };
-
 
 //logout
 export const userLogout = async (req: Request, res: Response) => {
@@ -64,8 +73,6 @@ export const userChangePassword = async (req: Request, res: Response) => {
   const changePsswdData = await changePasswordService(userId, req.body);
   return res.status(200).json({ message: "password changed" });
 };
-
-
 
 //forgot-password & reset-password
 export const forgotPassword = async (req: Request, res: Response) => {
@@ -151,20 +158,21 @@ export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
     throw new CustomError("refresh token is required", 404);
   }
 
-  if(!process.env.REFRESH_TOKEN_SECRET){
-    throw new CustomError("token credentials not found", 404)
+  if (!process.env.REFRESH_TOKEN_SECRET) {
+    throw new CustomError("token credentials not found", 404);
   }
 
-  const data = verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET)
-  if(!data){
-    throw new CustomError("token verification failed",404)
+  const data = verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+  if (!data) {
+    throw new CustomError("token verification failed", 404);
   }
 
-  const accessToken = generateToken(data)
-  if(!accessToken){
-    throw new CustomError("access token generation failed", 404)
+  const accessToken = generateToken(data);
+  if (!accessToken) {
+    throw new CustomError("access token generation failed", 404);
   }
 
-
-  return res.status(200).json({ message: "Access token generated", accessToken })
+  return res
+    .status(200)
+    .json({ message: "Access token generated", accessToken });
 };

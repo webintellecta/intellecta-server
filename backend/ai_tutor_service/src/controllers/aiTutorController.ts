@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Assessment from "../models/assessmentModel";
+import CustomError from "../utils/customError";
 
 interface AuthRequest extends Request {
   user?: { _id: string };
@@ -12,15 +13,10 @@ export const generateSyllabus = async (req: AuthRequest, res: Response) => {
     });
 
     if (!userAssessment || !userAssessment.aiResponse) {
-      return res
-        .status(404)
-        .json({ message: "Learning path not found for this user" });
+      throw new CustomError("Learning path not found for this user", 404);
     }
 
-    // Extract relevant data from the user's assessment
     const { aiResponse,strengths, weaknesses } = userAssessment;
-
-    // AI Prompt with Personalized Learning Context
     const aiPrompt = `
       Generate a structured syllabus tailored to the user's needs.
       
@@ -44,33 +40,24 @@ export const generateSyllabus = async (req: AuthRequest, res: Response) => {
       
       Return **only valid JSON**, without explanations or extra text.
     `;
-
-    // AI API Request
     const aiFeedback = aiPrompt;
 
     const syllabus = extractCompleteSyllabus(aiResponse);
 
     if (!syllabus) {
-      return res
-        .status(500)
-        .json({ message: "Failed to extract valid syllabus from AI response" });
+      throw new CustomError("Failed to extract valid syllabus from AI response", 500);
     }
-
-    return res.json({
+    res.json({
+      status: 'success',
       message: "Syllabus generated successfully",
       syllabus: Array.isArray(syllabus) ? syllabus : [syllabus],
     });
 };
 
-// Fixed extraction function that correctly identifies the final JSON
 function extractCompleteSyllabus(response: any) {
   try {
-    // For the specific response format from Mistral
     if (Array.isArray(response) && response[0]?.generated_text) {
       const generatedText = response[0].generated_text;
-      
-      // Find the last occurrence of a JSON object in the text
-      // This targets the actual syllabus JSON, not the template
       const lastJsonStartIndex = generatedText.lastIndexOf('{\n');
       
       if (lastJsonStartIndex !== -1) {
@@ -81,12 +68,9 @@ function extractCompleteSyllabus(response: any) {
           console.error("Error parsing last JSON section:", e);
         }
       }
-      
-      // Alternative approach: Find all JSON-like patterns and try the last one
       const jsonMatches = [...generatedText.matchAll(/(\{(?:[^{}]|(?:\{(?:[^{}]|(?:\{[^{}]*\}))*\}))*\})/g)];
       
       if (jsonMatches.length > 0) {
-        // Try the last match first (likely to be our complete syllabus)
         const lastMatch = jsonMatches[jsonMatches.length - 1][0];
         try {
           const parsed = JSON.parse(lastMatch);
@@ -96,13 +80,10 @@ function extractCompleteSyllabus(response: any) {
         } catch (e) {
           console.log("Could not parse last JSON match");
         }
-        
-        // Try all matches from last to first
         for (let i = jsonMatches.length - 1; i >= 0; i--) {
           try {
             const match = jsonMatches[i][0];
             const parsed = JSON.parse(match);
-            // Validate it looks like a syllabus
             if (parsed.modules && parsed.lessons) {
               return parsed;
             }
@@ -112,8 +93,6 @@ function extractCompleteSyllabus(response: any) {
         }
       }
     }
-    
-    // Fallback for direct response structures
     if (typeof response === 'object' && response !== null) {
       if (response.modules && response.lessons) {
         return response;

@@ -20,4 +20,15 @@ export const getCourseWithLessonsService = async( courseId:string) => {
         throw new CustomError("No lessons for the provided course", 404);
     }
     return { course, lessons };
+};
+
+export const getLessonByIdService = async( lessonId:string ) => {
+    if(!lessonId){
+        throw new CustomError("Please provide the lesson id", 404);
+    }
+    const lesson = await Lesson.findById(lessonId);
+    if(!lesson){
+        throw new CustomError("Lesson not found", 404);
+    }
+    return { lesson };
 }

@@ -43,3 +43,15 @@ export const getLessonByIdService = async( lessonId:string ) => {
     }
     return { lesson };
 }
+
+export const searchCoursesService = async (subject?:string, level?:string) => {
+    const query: any = {};
+    if (subject) query.subject = subject;
+    if (level) query.difficultyLevel = level;
+
+    const courses = await Course.find(query);
+    if (!courses || courses.length === 0) {
+        throw new CustomError("No courses found for the given filters", 404);
+    }
+    return { courses };
+}

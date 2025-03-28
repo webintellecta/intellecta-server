@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getLessonByIdService } from "../services/courseServices";
+import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getLessonByIdService, searchCoursesService } from "../services/courseServices";
 
 export const getAllCourses = async( req: Request, res: Response) => {
     const { courses } = await getAllCoursesService();
@@ -22,5 +22,11 @@ export const getLessonById = async(req:Request, res:Response) => {
     const { lessonId } = req.params;
     const { lesson } = await getLessonByIdService(lessonId);
     res.status(200).json({status: "success", message:'Lesson fetched successfully', data:lesson});
+};
+
+export const searchCourses = async (req:Request, res:Response) => {
+    const { subject, level } = req.query;
+    const { courses } = await searchCoursesService(subject as string | undefined,level as string | undefined);
+    res.status(200).json({ status:'success', message:"Search is successfull", data:courses});
 };
 

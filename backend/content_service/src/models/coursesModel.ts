@@ -4,7 +4,6 @@ interface ICourse extends Document {
     title: string;
     subject: string;
     description: string;
-    lessons: string[];
 }
 
 const CourseSchema: Schema = new Schema(

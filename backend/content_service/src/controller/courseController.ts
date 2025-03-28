@@ -1,9 +1,15 @@
 import { Request, Response } from "express";
-import { getAllCoursesService, getCourseWithLessonsService, getLessonByIdService } from "../services/courseServices";
+import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getLessonByIdService } from "../services/courseServices";
 
 export const getAllCourses = async( req: Request, res: Response) => {
     const { courses } = await getAllCoursesService();
     res.status(200).json({status:"success", message:'All Courses fetched successfully', data:courses});
+};
+
+export const getAllCoursesBySubject = async(req:Request, res:Response) => {
+    const { subject } = req.params;
+    const { courses } = await getAllCoursesBySubjectService(subject);
+    res.status(200).json({ status:"success", message: "Courses By Subject fetched succcessfully", data: courses});
 };
 
 export const getCourseWithLessons = async(req:Request, res:Response) => {
@@ -17,3 +23,4 @@ export const getLessonById = async(req:Request, res:Response) => {
     const { lesson } = await getLessonByIdService(lessonId);
     res.status(200).json({status: "success", message:'Lesson fetched successfully', data:lesson});
 };
+

@@ -7,7 +7,18 @@ export const getAllCoursesService = async () => {
     return { courses };
 };
 
-export const getCourseWithLessonsService = async( courseId:string) => {
+export const getAllCoursesBySubjectService = async (subject:string) => {
+    if(!subject){
+        throw new CustomError("Please provide the subject", 404);
+    }
+    const courses = await Course.find({ subject });
+    if (!courses || courses.length === 0){
+        throw new CustomError("There are no course for this subject", 404);
+    }
+    return { courses };
+}
+
+export const getCourseWithLessonsService = async (courseId:string) => {
     if(!courseId){
         throw new CustomError("Please provide the course id", 404);
     }

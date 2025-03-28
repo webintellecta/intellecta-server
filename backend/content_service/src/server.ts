@@ -1,9 +1,6 @@
 import dotenv from "dotenv";
 import connectDB from "./config/db";
-// import app from "./app";
-// import "./consumers/userConsumer";
-import express from "express";
-const app = express();
+import app from "./app";
 
 dotenv.config();
 

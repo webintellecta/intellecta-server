@@ -72,6 +72,7 @@ export interface IUser extends Document {
 }
 
 export const loginUserService = async (data: LoginData , res:Response): Promise<LoginResponse> => {
+  console.log("datallll", data)
   const userExist = await User.findOne({ email: data.email }).select("password") as IUser | null;
   if (!userExist) {
     throw new CustomError("User not found, please register", 404);

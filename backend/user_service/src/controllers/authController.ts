@@ -26,6 +26,7 @@ export const userRegistration = async (req: Request, res: Response) => {
 
 //login
 export const userLogin = async (req: Request, res: Response) => {
+  console.log("req.body", req.body)
   const loginData = await loginUserService(req.body, res);
   return res.status(200).json({ message: "user logged in", data: loginData });
 };

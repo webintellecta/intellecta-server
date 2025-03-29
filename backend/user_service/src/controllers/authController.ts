@@ -37,7 +37,6 @@ export const googleAuth = async (req: Request, res: Response) => {
   res.status(200).json({ status: "success", message: "Successfully logged in with Google", data: response });
 };
 
-
 //logout
 export const userLogout = async (req: Request, res: Response) => {
   const userData = await logOutUserService(req.body, res);
@@ -130,18 +129,18 @@ export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
     throw new CustomError("refresh token is required", 404);
   }
 
-  if(!process.env.REFRESH_TOKEN_SECRET){
-    throw new CustomError("token credentials not found", 404)
+  if (!process.env.REFRESH_TOKEN_SECRET) {
+    throw new CustomError("token credentials not found", 404);
   }
 
-  const data = verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET)
-  if(!data){
-    throw new CustomError("token verification failed",404)
+  const data = verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+  if (!data) {
+    throw new CustomError("token verification failed", 404);
   }
 
-  const accessToken = generateToken(data)
-  if(!accessToken){
-    throw new CustomError("access token generation failed", 404)
+  const accessToken = generateToken(data);
+  if (!accessToken) {
+    throw new CustomError("access token generation failed", 404);
   }
   return res.status(200).json({ message: "Access token generated", accessToken })
 };

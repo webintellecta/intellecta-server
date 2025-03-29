@@ -27,33 +27,13 @@ export const userRegistration = async (req: Request, res: Response) => {
 //login
 export const userLogin = async (req: Request, res: Response) => {
   const loginData = await loginUserService(req.body, res);
-<<<<<<< HEAD
-  const user = await User.findById(loginData.user.id);
-  console.log("User data before publishing:", user);
-  await publishToQueue("user_fetched", user);
-  console.log("User published to queue");
-
-=======
->>>>>>> upstream/dev
   return res.status(200).json({ message: "user logged in", data: loginData });
 };
 
 //google login
 export const googleAuth = async (req: Request, res: Response) => {
   const response = await googleAuthentication(req.body, res);
-<<<<<<< HEAD
-  await publishToQueue("user_fetched", response);
-  console.log(response);
-  res
-    .status(200)
-    .json({
-      status: "success",
-      message: "Successfully logged in with Google",
-      data: response,
-    });
-=======
   res.status(200).json({ status: "success", message: "Successfully logged in with Google", data: response });
->>>>>>> upstream/dev
 };
 
 //logout
@@ -161,12 +141,5 @@ export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
   if (!accessToken) {
     throw new CustomError("access token generation failed", 404);
   }
-<<<<<<< HEAD
-
-  return res
-    .status(200)
-    .json({ message: "Access token generated", accessToken });
-=======
   return res.status(200).json({ message: "Access token generated", accessToken })
->>>>>>> upstream/dev
 };

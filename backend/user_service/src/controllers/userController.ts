@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getUserByIdService, profilePictureService, userEditService  } from "../service/userService";
 import CustomError from "../utils/customErrorHandler";
+import User from "../models/userModel";
 
 //Get User
 export const getUserById = async (req:Request , res:Response) => {

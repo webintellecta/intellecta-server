@@ -21,7 +21,6 @@ export const getAllGames = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  console.log("shadil ", userCache);
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const skip = (page - 1) * limit;
@@ -40,9 +39,10 @@ export const createGameSession = async (req: AuthenticatedRequest, res: Response
   if (completed) {
     const gamePoints: Record<string, number> = {
       "tic_tac_toe": 50,
-      "memory_game": 100,
-      "word-builder": 150,
-      "math-quiz": 200,
+      "memory_game": score,
+      "word_builder": 150,
+      "geography_quiz":score * 10,
+      "math_quiz": 200,
       "trivia-quiz": 200,
       "typing-speed": 250,
       "checkers": 300,
@@ -73,6 +73,7 @@ export const createGameSession = async (req: AuthenticatedRequest, res: Response
     $inc: {
       gamesPlayed: 1,
       totalScore: pointsEarned, // Add total points across all games
+      totalTimePlayed: timeTaken,
     },
     $set: {
       lastPlayedGame: gameSlug,
@@ -109,7 +110,6 @@ export const getRecentPlayedGame = async ( req: AuthenticatedRequest, res: Respo
     .exec();
 
   if (!recentGames) return res.json({ message: "No recent games found" });
-console.log("recent games ", recentGames);
 
   const game = await Game.findOne({ slug: recentGames?.gameSlug }).exec();
   if (!game) return res.status(404).json({ message: "Game data not found" });
@@ -143,7 +143,7 @@ export const addGame = async (req: Request,res: Response): Promise<Response> => 
 };
 
 export const getLeaderboard = async (req: AuthenticatedRequest,res: Response): Promise<Response> => {
-  const leaderboardEntries = await Leaderboard.find().limit(20).sort({ bestScore: -1 });
+  const leaderboardEntries = await Leaderboard.find().limit(20).sort({ totalScore: -1 });
 
   const userIds: string[] = leaderboardEntries.map((entry:any) =>entry.userId.toString());
 
@@ -162,3 +162,11 @@ export const getLeaderboard = async (req: AuthenticatedRequest,res: Response): P
     leaderboard: leaderboardWithUsers,
   });
 };
+
+export const getLeaderboardByUserId = async(req: AuthenticatedRequest, res:Response):Promise<Response>=> {
+  const userid= req.user?.userId;
+  console.log("game usersid ", userid);
+  const userLeaderboard = await Leaderboard.findOne({userId: userid});
+  if(!userLeaderboard) return res.status(404).json({message: "No leaderboard found for this user"})
+  return res.status(200).json({leaderboard: userLeaderboard, message:"leaderboard fetched successfully"})
+}

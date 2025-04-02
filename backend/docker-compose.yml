@@ -34,7 +34,11 @@ services:
       - intellecta-network
     env_file:
       - .env
-    restart: always
+    volumes:
+      - ./game_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
 
   ai-tutor-service:
     build: ./ai_tutor_service

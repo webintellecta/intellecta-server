@@ -11,12 +11,13 @@ import {
 } from "../controllers/authController";
 import { asyncHandler } from "../middleware/asyncHandler";
 
-import { getUserById, profilePictureController, userEditController } from "../controllers/userController";
+import { getBulkUsers, getUserById, profilePictureController, userEditController } from "../controllers/userController";
 
 import { isAuthenticate } from "../middleware/isAuth";
 import {upload} from "../middleware/profilePicUploader"
 
 const userServiceRouter = express.Router();
+
 
 userServiceRouter.post("/register", asyncHandler(userRegistration));
 userServiceRouter.post("/login", asyncHandler(userLogin));
@@ -40,5 +41,9 @@ userServiceRouter.patch('/edit-profile', isAuthenticate, asyncHandler(userEditCo
 
 //access token to refresh token
 userServiceRouter.post("/refreshaccesstoken", asyncHandler(refreshTokeToAccessToken))
+
+//get users by bulk ids
+userServiceRouter.post("/bulk", asyncHandler(getBulkUsers))
+
 
 export default userServiceRouter;

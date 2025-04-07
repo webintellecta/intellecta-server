@@ -6,14 +6,15 @@ import "./consumers/userConsumer";
 
 
 dotenv.config()
-const PORT = process.env.PORT
+const PORT = Number(process.env.PORT)  || 5001
 
 connectDb()
 
 
-app.listen(PORT, ()=>{
-    console.log(`server is running in ${PORT}`)
-})
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`User Service is running on port ${PORT}`);
+});
+
 
 
 

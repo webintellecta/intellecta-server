@@ -69,7 +69,6 @@ function extractCompleteSyllabus(response: any) {
         }
       }
       const jsonMatches = [...generatedText.matchAll(/(\{(?:[^{}]|(?:\{(?:[^{}]|(?:\{[^{}]*\}))*\}))*\})/g)];
-      
       if (jsonMatches.length > 0) {
         const lastMatch = jsonMatches[jsonMatches.length - 1][0];
         try {
@@ -106,3 +105,4 @@ function extractCompleteSyllabus(response: any) {
     return null;
   }
 }
+

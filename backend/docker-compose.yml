@@ -39,6 +39,13 @@ services:
       - /app/node_modules  # Prevents overwriting node_modules
     command: npm run dev  # Runs nodemon for hot-reloading
     restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./game_service
+          target: /app
+        - action: rebuild
+          path: ./game_service/package.json
 
   ai-tutor-service:
     build: ./ai_tutor_service

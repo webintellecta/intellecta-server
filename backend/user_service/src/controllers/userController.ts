@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getUserByIdService, profilePictureService, userEditService  } from "../service/userService";
 import CustomError from "../utils/customErrorHandler";
+import User from "../models/userModel";
 
 //Get User
 export const getUserById = async (req:Request , res:Response) => {
@@ -43,3 +44,11 @@ export const userEditController = async (req: AuthenticatedRequest, res: Respons
     });
 }
 
+
+//bulk users 
+export const getBulkUsers = async (req:Request, res:Response) :Promise<Response> => {
+    const { userIds } = req.body;
+    const users = await User.find({ _id: { $in: userIds } }, "_id name profilePic");    
+    return res.json(users);
+  };
+  

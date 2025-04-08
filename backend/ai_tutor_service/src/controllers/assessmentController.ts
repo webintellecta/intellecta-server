@@ -33,7 +33,7 @@ export const evaluateAssessment = async( req: Request, res: Response) => {
 
   const { assessmentResult } = await evaluateAssessmentService(userId, req.body);
   res.status(200).json({
-    message: "Assessment evaluated successfully",
+    message: "Assessment evaluated successfully",              
     assessmentResult
   })
 };

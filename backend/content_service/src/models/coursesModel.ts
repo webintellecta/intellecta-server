@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+
 interface ICourse extends Document {
     title: string;
     subject: string;
@@ -9,11 +10,12 @@ interface ICourse extends Document {
     thumbnail?: string; 
 }
 
+
 const CourseSchema: Schema = new Schema(
   {
     title:{
         type: String,
-        required: true, 
+        required: true,
     },
     subject: {
       type: String,

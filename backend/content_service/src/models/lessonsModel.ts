@@ -1,16 +1,18 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+
 interface ILesson extends Document {
     course: mongoose.Types.ObjectId;
     title: string;
     type: "video" | "quiz" | "exercise" | "article";
     tags: string[];
-    url: string;
+    url?: string;
     content?: string;
     duration?: number;
     resources?: string[];
     order: number;
 }
+
 
 const LessonSchema: Schema = new Schema(
   {
@@ -21,41 +23,37 @@ const LessonSchema: Schema = new Schema(
     },
     title:{
         type: String,
-        required: true, 
+        required: true,
     },
     type: {
-        type: String, 
+        type: String,
         required: true,
         enum: ["video", "quiz", "exercise", "article"]
     },
-    tags: { 
-        type: [String], 
-        required: true 
+    tags: {
+        type: [String],
+        required: true
     },
-    url: { 
+    url: {
         type: String
     },
-    content: { 
-        type: String 
+    content: {
+        type: String
     },
-    duration: { 
-        type: Number 
+    duration: {
+        type: Number
     },
-    resources: { 
-        type: [String] 
+    resources: {
+        type: [String]
     },
-    order: { 
-        type: Number, 
-        required: true 
+    order: {
+        type: Number,
+        required: true
     },
   },
   { timestamps: true }
 );
 
+
 const Lesson = mongoose.model<ILesson>("Lesson", LessonSchema);
 export default Lesson;
-
-
-
-
-

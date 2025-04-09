@@ -11,7 +11,6 @@ interface User {
 
 export const getLeaderboardByUserId = async ( req: AuthenticatedRequest, res: Response): Promise<Response> => {
     const userid = req.user?.userId;
-    console.log("game usersid ", userid);
     const userLeaderboard = await Leaderboard.findOne({ userId: userid });
     if (!userLeaderboard) return res.status(404).json({ message: "No leaderboard found for this user" });
     return res.status(200).json({

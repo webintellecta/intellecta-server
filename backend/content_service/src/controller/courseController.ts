@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getLessonByIdService, markLessonAsCompleteService, searchCoursesService } from "../services/courseServices";
+import CustomError from "../utils/customError";
+import { mapAgeToGradeAndDifficulty } from "../utils/gradeMapping";
 
 
 interface AuthRequest extends Request {
-    user?: { _id: string };
+    user?: { _id: string, age: number; };
   }
 
 export const getAllCourses = async( req: Request, res: Response) => {
@@ -11,9 +13,14 @@ export const getAllCourses = async( req: Request, res: Response) => {
     res.status(200).json({status:"success", message:'All Courses fetched successfully', data:courses});
 };
 
-export const getAllCoursesBySubject = async(req:Request, res:Response) => {
+export const getAllCoursesBySubject = async(req:AuthRequest, res:Response) => {
     const { subject } = req.params;
-    const { courses } = await getAllCoursesBySubjectService(subject);
+    const { age } = req.user || {} ;
+    if (!age) {     
+        throw new CustomError("User age not found in token", 400);
+      }
+    const { gradeLevel, difficultyLevel } = mapAgeToGradeAndDifficulty(age);
+    const { courses } = await getAllCoursesBySubjectService(subject, gradeLevel);
     res.status(200).json({ status:"success", message: "Courses By Subject fetched succcessfully", data: courses});
 };
 

@@ -8,7 +8,7 @@ interface ICourse extends Document {
     gradeLevel: number;
     difficultyLevel: string;
     thumbnail?: string; 
-}
+} 
 
 
 const CourseSchema: Schema = new Schema(

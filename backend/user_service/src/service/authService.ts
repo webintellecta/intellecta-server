@@ -36,7 +36,7 @@ export const registerUser = async (data: any , res:Response) => {
     phone: data.phone,
   });
   await newUser.save();
-  const token =  generateToken(newUser._id)
+  const token =  generateToken(newUser._id, Number(newUser.age))
   res.cookie("token", token,{
     httpOnly: true,
     secure: false,
@@ -67,11 +67,12 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  age: number;
   save(): Promise<IUser>;
 }
 
 export const loginUserService = async (data: LoginData , res:Response): Promise<LoginResponse> => {
-  const userExist = await User.findOne({ email: data.email }).select("password") as IUser | null;
+  const userExist = await User.findOne({ email: data.email }).select("password age") as IUser | null;
   if (!userExist) {
     throw new CustomError("User not found, please register", 404);
   }
@@ -81,8 +82,8 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
   if (!validateUser) {
     throw new CustomError("Incorrect password", 401);
   }
-  const token = generateToken(userExist._id.toString()); 
-  const refreshToken = generateRefreshToken(userExist._id.toString());
+  const token = generateToken(userExist._id.toString(),userExist.age); 
+  const refreshToken = generateRefreshToken(userExist._id.toString(), userExist.age);
 
   res.cookie("token",token,{
     httpOnly: true,
@@ -149,8 +150,8 @@ export const googleAuthentication = async (data: GoogleAuthData, res: Response) 
     throw new CustomError("User ID not found", 500);
   }
 
-  const token = generateToken(user._id.toString());
-  const refreshToken = generateRefreshToken(user._id.toString())
+  const token = generateToken(user._id.toString(), Number(user.age));
+  const refreshToken = generateRefreshToken(user._id.toString(), Number(user.age))
 
   res.cookie("token",token,{
     httpOnly: true,

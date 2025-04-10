@@ -4,12 +4,10 @@ import { SERVICES } from "./config";
 
 const router = Router();
 
-// Health Check Route
-router.get('/health', (req: Request, res: Response) => {
-    res.status(200).send('API Gateway is running');
-});
+// router.get('/health', (req: Request, res: Response) => {
+//     res.status(200).send('API Gateway is running');
+// });
 
-// Function to handle proxy errors
 const handleProxyError = (serviceName: string) => {
     return (err: Error, req: Request, res: Response) => {
         console.error(`Proxy error for ${serviceName}: ${err.message}`);
@@ -17,26 +15,20 @@ const handleProxyError = (serviceName: string) => {
     };
 };
 
-// Function to create proxy with explicit type casting
-const createProxy = (target: string, pathRewrite: Record<string, string>) => 
+const createProxy = (target: string ) => 
     createProxyMiddleware({
         target,
         changeOrigin: true,
-        pathRewrite,
         onError: handleProxyError(target),
-        logLevel: 'debug' as any  // Cast to 'any' to bypass TypeScript error
-    } as any); // Explicitly cast the whole object
+        logLevel: 'debug' as any  
+    } as any); 
 
-// Proxy requests to User Service
-router.use("/api/user", createProxy(SERVICES.user, { "^/api/user": "" }));
+router.use("/api/user", createProxy(SERVICES.user));
 
-// Proxy requests to AI Tutor Service
-router.use("/api/ai-tutor", createProxy(SERVICES.aiTutor, { "^/api/ai-tutor": "" }));
+router.use("/api/ai-tutor", createProxy(SERVICES.aiTutor));
 
-// Proxy requests to Game Service
-router.use("/api/games", createProxy(SERVICES.game, { "^/api/games": "" }));
+router.use("/api/games", createProxy(SERVICES.game));
 
-// Proxy requests to Content Service
-router.use("/api/courses", createProxy(SERVICES.content, { "^/api/courses": "" }));
+router.use("/api/courses", createProxy(SERVICES.content));
 
 export default router;

@@ -2,7 +2,8 @@ import Jwt, { JwtPayload } from "jsonwebtoken";
 import CustomError from "./customErrorHandler";
 
 
-export const generateToken = (userId: string | unknown): string => {
+export const generateToken = (userId: string | unknown, age: number): string => {
+  console.log("generate age", age);
   if (!process.env.TOKEN_SECRET) {
     console.log("within if", process.env.TOKEN_SECRET)
     throw new CustomError(
@@ -10,14 +11,14 @@ export const generateToken = (userId: string | unknown): string => {
       404
     );
   }
-  return Jwt.sign({ _id: userId }, process.env.TOKEN_SECRET, {
+  return Jwt.sign({ _id: userId, age: age }, process.env.TOKEN_SECRET, {
     expiresIn: "1h",
   });
 };
 
 
 //generaterefreshtoken
-export const generateRefreshToken = (userId: string | unknown): string => {
+export const generateRefreshToken = (userId: string | unknown, age:number): string => {
   console.log("generating token", process.env.REFRESH_TOKEN_SECRET);
   if (!process.env.REFRESH_TOKEN_SECRET) {
     throw new CustomError(
@@ -25,7 +26,7 @@ export const generateRefreshToken = (userId: string | unknown): string => {
       404
     );
   }
-  return Jwt.sign({ _id: userId }, process.env.REFRESH_TOKEN_SECRET, {
+  return Jwt.sign({ _id: userId, age: age }, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: "1h",
   });
 };
@@ -37,9 +38,12 @@ interface CustomJwtPayload extends JwtPayload {
 
 export const verifyToken = (token: string, tokenSecret: string) => {
   const decoded = Jwt.verify(token, tokenSecret) as CustomJwtPayload ;
-
+console.log("verify decoded", decoded)
   if (typeof decoded === 'string' || !('_id' in decoded)) {
     throw new CustomError('Invalid token payload',404);
   }
-  return decoded._id;
+  return {
+    _id: decoded._id,
+    age: decoded.age, // you can now use this directly
+  };
 };

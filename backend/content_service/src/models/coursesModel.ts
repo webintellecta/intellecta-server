@@ -7,8 +7,8 @@ interface ICourse extends Document {
     description: string;
     gradeLevel: number;
     difficultyLevel: string;
-    thumbnail?: string;
-}
+    thumbnail?: string; 
+} 
 
 
 const CourseSchema: Schema = new Schema(
@@ -24,22 +24,21 @@ const CourseSchema: Schema = new Schema(
     description: {
       type: String
     },
-    gradeLevel: {
-      type: Number,
-      required: true
+    gradeLevel: { 
+      type: Number, 
+      required: true 
+    }, 
+    difficultyLevel: { 
+      type: String, 
+      enum: ["beginner", "intermediate", "advanced"], 
+      required: true 
     },
-    difficultyLevel: {
-      type: String,
-      enum: ["beginner", "intermediate", "advanced"],
-      required: true
-    },
-    thumbnail: {
-      type: String
+    thumbnail: { 
+      type: String 
     },
   },
   { timestamps: true }
 );
-
 
 const Course = mongoose.model<ICourse>("Course", CourseSchema);
 export default Course;

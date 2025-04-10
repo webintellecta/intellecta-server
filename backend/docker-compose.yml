@@ -109,6 +109,26 @@ services:
       - /app/node_modules  # Prevents overwriting node_modules
     command: npm run dev  # Runs nodemon for hot-reloading
     restart: unless-stopped
+  
+  admin_service:
+    build: ./admin_service
+    container_name: admin-service
+    ports:
+      - "5006:5006"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./admin_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
 
   api_gateway:
     build: ./api_gateway

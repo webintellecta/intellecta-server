@@ -60,7 +60,6 @@ export const createGameSession = async (
   let leaderboard = await Leaderboard.findOne({
     userId: new mongoose.Types.ObjectId(userId),
   });
-  console.log("Leaderboard entry found:", leaderboard);
 
   let updateData: any = {
     $inc: {
@@ -94,7 +93,6 @@ export const createGameSession = async (
     updateData.$set["badges"] = updatedBadges;
   }
 
-  console.log("Updating leaderboard with data:", updateData);
 
   try {
     leaderboard = await Leaderboard.findOneAndUpdate(
@@ -103,7 +101,6 @@ export const createGameSession = async (
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    console.log("Leaderboard successfully updated:", leaderboard);
   } catch (error) {
     console.error("Error updating leaderboard:", error);
     return res

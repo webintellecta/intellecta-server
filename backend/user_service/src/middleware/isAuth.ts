@@ -8,7 +8,7 @@ import CustomError from "../utils/customErrorHandler";
 //     [key: string]: any;
 //   }
 interface CustomRequest extends Request {
-  user?: { userId: string }; 
+  user?: { userId: string, age: number }; 
 }
 
 export const isAuthenticate = async (
@@ -22,12 +22,13 @@ export const isAuthenticate = async (
     }
     try{
       const decoded =jwt.verify(token, process.env.TOKEN_SECRET as string) as JwtPayload;
-
+console.log("decode", decoded);
       if (typeof decoded === "string" || !decoded._id) {
           return next(new CustomError("Invalid token payload", 401));
       }
     
-      req.user = { userId: decoded._id };
+      req.user = { userId: decoded._id, age: decoded.age };
+      console.log("req user", req.user);
       next()
     }
     catch(err){

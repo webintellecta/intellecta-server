@@ -138,7 +138,7 @@ export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
     throw new CustomError("token verification failed", 404);
   }
 
-  const accessToken = generateToken(data);
+  const accessToken = generateToken(data._id,data.age);
   if (!accessToken) {
     throw new CustomError("access token generation failed", 404);
   }

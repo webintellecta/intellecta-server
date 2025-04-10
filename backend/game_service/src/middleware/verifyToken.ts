@@ -7,7 +7,7 @@ import CustomError from "../utils/CustomError";
 //     [key: string]: any;
 //   }
 interface CustomRequest extends Request {
-  user?: { userId: string, age: number }; 
+  user?: { userId: string };
 }
 
 export const isAuthenticate = async (
@@ -31,7 +31,7 @@ export const isAuthenticate = async (
       return next(new CustomError("Invalid token payload", 401));
     }
 
-    req.user = { userId: decoded._id, age: decoded.age };
+    req.user = { userId: decoded._id };
     next();
   } catch (err) {
     return next(new CustomError(`Invalid or expired token ${err}`, 401));

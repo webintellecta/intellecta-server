@@ -26,7 +26,6 @@ export const userRegistration = async (req: Request, res: Response) => {
 
 //login
 export const userLogin = async (req: Request, res: Response) => {
-  console.log("req.body", req.body)
   const loginData = await loginUserService(req.body, res);
   return res.status(200).json({ message: "user logged in", data: loginData });
 };
@@ -138,7 +137,7 @@ export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
     throw new CustomError("token verification failed", 404);
   }
 
-  const accessToken = generateToken(data._id,data.age);
+  const accessToken = generateToken(data._id);
   if (!accessToken) {
     throw new CustomError("access token generation failed", 404);
   }

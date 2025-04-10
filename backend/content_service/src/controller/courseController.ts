@@ -2,10 +2,23 @@ import { Request, Response } from "express";
 import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getLessonByIdService, markLessonAsCompleteService, searchCoursesService } from "../services/courseServices";
 import CustomError from "../utils/customError";
 import { mapAgeToGradeAndDifficulty } from "../utils/gradeMapping";
+import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
+import { getUserData } from "../consumers/userConsumers";
 
+interface UserData {
+    _id: string;
+    name: string;
+    email: string;
+    age: number;
+    phone: string;
+    role: string;
+    profilePic: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
 
 interface AuthRequest extends Request {
-    user?: { _id: string, age: number; };
+    user?: { _id: string };
   }
 
 export const getAllCourses = async( req: Request, res: Response) => {
@@ -15,7 +28,23 @@ export const getAllCourses = async( req: Request, res: Response) => {
 
 export const getAllCoursesBySubject = async(req:AuthRequest, res:Response) => {
     const { subject } = req.params;
-    const { age } = req.user || {} ;
+    if (!req.user || !req.user._id) {
+        throw new CustomError("Unauthorized access. User ID not found.", 401);
+      }
+    const userId = req.user._id;
+      
+    await publishToQueue("user_id", userId);
+
+    let userData = (await getUserData(userId)) as UserData | undefined;
+
+    if (!userData) {
+        throw new CustomError("User data not found. Try again later.", 400);
+    }
+
+    if (userData instanceof Map) {
+        userData = Object.fromEntries(userData) as UserData;
+    }
+    const  age  = userData.age;
     if (!age) {     
         throw new CustomError("User age not found in token", 400);
       }

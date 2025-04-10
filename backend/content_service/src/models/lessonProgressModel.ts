@@ -7,7 +7,7 @@ export interface ILessonProgress extends Document {
   completed: boolean;
   completedAt?: Date;
 }
-
+            
 const LessonProgressSchema = new Schema<ILessonProgress>(
   {
     userId: {

@@ -8,11 +8,11 @@ export const getAllCoursesService = async () => {
     return { courses };
 };
 
-export const getAllCoursesBySubjectService = async (subject:string) => {
-    if(!subject){
+export const getAllCoursesBySubjectService = async (subject:string, gradeLevel: number) => {
+    if(!subject || !gradeLevel){
         throw new CustomError("Please provide the subject", 404);
     }
-    const courses = await Course.find({ subject });
+    const courses = await Course.find({ subject, gradeLevel });
     if (!courses || courses.length === 0){
         throw new CustomError("There are no course for this subject", 404);
     }

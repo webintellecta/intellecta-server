@@ -11,7 +11,7 @@ courseRouter.get("/", asyncErrorHandler( getAllCourses));
 courseRouter.get("/:courseId", asyncErrorHandler( getCourseWithLessons));
 courseRouter.get("/lessons/:lessonId", asyncErrorHandler( getLessonById));
 courseRouter.post("/lessons/:lessonId/complete", authMiddleware, asyncErrorHandler(markLessonAsComplete));
-courseRouter.get("/subject/:subject", asyncErrorHandler( getAllCoursesBySubject));
+courseRouter.get("/subject/:subject",authMiddleware, asyncErrorHandler( getAllCoursesBySubject));
 
 
 export default courseRouter;

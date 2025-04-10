@@ -8,7 +8,7 @@ import CustomError from "../utils/customErrorHandler";
 //     [key: string]: any;
 //   }
 interface CustomRequest extends Request {
-  user?: { userId: string, age: number }; 
+  user?: { userId: string }; 
 }
 
 export const isAuthenticate = async (
@@ -18,20 +18,19 @@ export const isAuthenticate = async (
 ) => {
     const token = req.cookies.token
     if(!token){
-        return next(new CustomError("Token does not exist in the cookie", 401))
+      throw new CustomError("Token does not exist in the cookie", 401);
     }
     try{
       const decoded =jwt.verify(token, process.env.TOKEN_SECRET as string) as JwtPayload;
-console.log("decode", decoded);
+
       if (typeof decoded === "string" || !decoded._id) {
-          return next(new CustomError("Invalid token payload", 401));
+        throw new CustomError("Invalid token payload", 401);
       }
     
-      req.user = { userId: decoded._id, age: decoded.age };
-      console.log("req user", req.user);
+      req.user = { userId: decoded._id };
       next()
     }
     catch(err){
-      return next(new CustomError(`Invalid or expired token ${err}`, 401));
+      throw new CustomError(`Invalid or expired token ${err}`, 401);
     }     
 };

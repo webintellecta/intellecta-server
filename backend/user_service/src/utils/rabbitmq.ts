@@ -19,31 +19,38 @@ async function connectToRabbitMQ(): Promise<Channel> {
   }
 }
 
-export async function publishToQueue(
-  queue: string,
-  currentUser: any
-): Promise<void> {
+export async function publishToQueue(queue: string, data: any): Promise<void> {
   let channel;
   try {
     channel = await connectToRabbitMQ();
     await channel.assertQueue(queue);
-    const message = {
-      _id: currentUser.get("_id")?.toString() || "",
-      name: currentUser.get("name") || "Unknown",
-      email: currentUser.get("email") || "Unknown",
-      age: currentUser.get("age") || null,
-      phone: currentUser.get("phone") || "Unknown",
-      role: currentUser.get("role") || "Unknown",
-      profilePic: currentUser.get("profilePic") || "",
-      createdAt: currentUser.get("createdAt")
-        ? new Date(currentUser.get("createdAt")).toISOString()
-        : null,
-      updatedAt: currentUser.get("updatedAt")
-        ? new Date(currentUser.get("updatedAt")).toISOString()
-        : null,
-    };
+
+    let message;
+
+    // Check if it's a Map (single user)
+    if (data instanceof Map) {
+      message = {
+        _id: data.get("_id")?.toString() || "",
+        name: data.get("name") || "Unknown",
+        email: data.get("email") || "Unknown",
+        age: data.get("age") || null,
+        phone: data.get("phone") || "Unknown",
+        role: data.get("role") || "Unknown",
+        profilePic: data.get("profilePic") || "",
+        createdAt: data.get("createdAt")
+          ? new Date(data.get("createdAt")).toISOString()
+          : null,
+        updatedAt: data.get("updatedAt")
+          ? new Date(data.get("updatedAt")).toISOString()
+          : null,
+      };
+    } else {
+      // It's either an array of users or a plain object (like already mapped users)
+      message = data;
+    }
+
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message), "utf-8"));
-    console.log(`Message sent to queue from user service ${queue}`);
+    console.log(`Message sent to queue "${queue}"`);
   } catch (error) {
     console.error("RabbitMQ Publish Error:", error);
     throw error;
@@ -51,6 +58,7 @@ export async function publishToQueue(
     if (channel) await channel.close();
   }
 }
+
 
 export async function consumeFromQueue(
   queue: string,

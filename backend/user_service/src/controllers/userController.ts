@@ -51,4 +51,18 @@ export const getBulkUsers = async (req:Request, res:Response) :Promise<Response>
     const users = await User.find({ _id: { $in: userIds } }, "_id name profilePic");    
     return res.json(users);
   };
-  
+
+
+//Get all users
+export const getAllUsers = async (req:Request, res:Response) :Promise<Response> => {
+    const users = await User.find()
+    if (!users) {
+        throw new CustomError("No user is found", 400);
+    }
+
+    return res.status(200).json({
+        status: "success",
+        message:"getted all users",
+        data: users
+    })
+};

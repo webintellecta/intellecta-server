@@ -1,21 +1,10 @@
 import { Request, Response } from "express";
 import Game from "../models/gameSchema";
 import GameSession from "../models/gameSession";
-import { userCache } from "../consumers/userConsumer";
 import Leaderboard from "../models/leaderboardSchema";
-import axios = require("axios");
-
-interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-  };
-}
-
-interface User{
-  _id: string,
-  name:string,
-  profilePic:string,
-}
+import { AuthenticatedRequest, ILeaderboard } from "../types";
+import { checkAndEarnBadges } from "./leaderboardController";
+import mongoose from "mongoose";
 
 export const getAllGames = async (
   req: Request,
@@ -31,33 +20,35 @@ export const getAllGames = async (
   return res.status(200).json({ message: "Game fetched successfully", games });
 };
 
-export const createGameSession = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+export const createGameSession = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<Response> => {
   const { userId, gameSlug, score, completed, timeTaken } = req.body;
 
-  let pointsEarned = 0;
-
-  if (completed) {
-    const gamePoints: Record<string, number> = {
-      "tic_tac_toe": 50,
-      "memory_game": score,
-      "word_builder": 150,
-      "geography_quiz":score * 10,
-      "math_quiz": 200,
-      "trivia-quiz": 200,
-      "typing-speed": 250,
-      "checkers": 300,
-      "sudoku": 350,
-      "chess": 500
-    };
-
-    pointsEarned = gamePoints[gameSlug] || 10; // Default score for unknown games
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: "Invalid user ID" });
   }
 
-  // Save game session
+  let pointsEarned = 0;
+  if (completed) {
+    const gamePoints: Record<string, number> = {
+      tic_tac_toe: 50,
+      memory_game: score,
+      word_builder: score,
+      geography_quiz: score * 10,
+      math_quiz: 200,
+      checkers: 300,
+      sudoku: 350,
+      chess: 500,
+    };
+    pointsEarned = gamePoints[gameSlug] || 10;
+  }
+
   const newSession = new GameSession({
     userId,
     gameSlug,
-    score,  // Storing score in the session
+    score,
     completed,
     pointsEarned,
     timeTaken,
@@ -66,13 +57,14 @@ export const createGameSession = async (req: AuthenticatedRequest, res: Response
 
   await newSession.save();
 
-  // Update leaderboard
-  const leaderboard = await Leaderboard.findOne({ userId });
+  let leaderboard = await Leaderboard.findOne({
+    userId: new mongoose.Types.ObjectId(userId),
+  });
 
   let updateData: any = {
     $inc: {
       gamesPlayed: 1,
-      totalScore: pointsEarned, // Add total points across all games
+      totalScore: pointsEarned,
       totalTimePlayed: timeTaken,
     },
     $set: {
@@ -81,49 +73,91 @@ export const createGameSession = async (req: AuthenticatedRequest, res: Response
     },
   };
 
-  // Ensure bestScores object exists
   if (!leaderboard?.bestScores) {
     updateData.$set["bestScores"] = { [gameSlug]: score };
   } else {
-    updateData.$max = { [`bestScores.${gameSlug}`]: score }; // Store highest score for that game
+    updateData.$max = { [`bestScores.${gameSlug}`]: score };
   }
 
-  await Leaderboard.findOneAndUpdate(
-    { userId },
-    updateData,
-    { upsert: true, new: true }
-  );
+  if (leaderboard) {
+    const leaderboardData: ILeaderboard = JSON.parse(
+      JSON.stringify({
+        ...leaderboard.toObject(),
+        bestScores: Object.fromEntries(leaderboard.bestScores) as Record<
+          string,
+          number
+        >,
+      })
+    );
+    const updatedBadges = checkAndEarnBadges(leaderboardData);
+    updateData.$set["badges"] = updatedBadges;
+  }
+
+
+  try {
+    leaderboard = await Leaderboard.findOneAndUpdate(
+      { userId: new mongoose.Types.ObjectId(userId) },
+      updateData,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+  } catch (error) {
+    console.error("Error updating leaderboard:", error);
+    return res
+      .status(500)
+      .json({ error: "Database error while updating leaderboard" });
+  }
 
   return res.status(201).json({
     message: "Game session created & leaderboard updated",
+    leaderboard,
   });
 };
 
-
- 
-
-export const getRecentPlayedGame = async ( req: AuthenticatedRequest, res: Response): Promise<Response> => {
+export const getRecentPlayedGame = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<Response> => {
   const userId = req.user?.userId;
-  
-  const recentGames = await GameSession.findOne({ userId })
+  const recentGames = await GameSession.find({ userId })
     .sort({ datePlayed: -1 })
     .exec();
 
   if (!recentGames) return res.json({ message: "No recent games found" });
+  const gameSlugs = recentGames.map((session) => session.gameSlug);
 
-  const game = await Game.findOne({ slug: recentGames?.gameSlug }).exec();
-  if (!game) return res.status(404).json({ message: "Game data not found" });
+  const games = await Game.find({ slug: { $in: gameSlugs } }).exec();
+  if (!games) return res.status(404).json({ message: "Game data not found" });
 
-  return res.status(200).json({ message: "Game fetched successfully", game });
+  const recentPlayedGames = games.map((game) => {
+    const session = recentGames.find((g) => g.gameSlug === game.slug);
+    return {
+      name: game.name,
+      slug: game.slug,
+      thumbnailImg: game.thumbnailImg,
+      difficulty: game.difficulty,
+      score: session?.score || 0,
+      datePlayed: session?.datePlayed,
+    };
+  });
+  return res
+    .status(200)
+    .json({ message: "Game fetched successfully", games: recentPlayedGames });
 };
 
-export const getGameBySlug = async ( req: Request, res: Response): Promise<Response> => {
+export const getGameBySlug = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const game = await Game.findOne({ slug: req.params.slug });
   if (!game) return res.status(404).json({ message: "Game not found" });
   return res.status(200).json({ game });
 };
 
-export const addGame = async (req: Request,res: Response): Promise<Response> => {
+export const addGame = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const { name, slug, description, difficulty } = req.body;
 
   const thumbImg: string | null = req.file?.path ?? null;
@@ -141,32 +175,3 @@ export const addGame = async (req: Request,res: Response): Promise<Response> => 
     .status(201)
     .json({ message: "Game created successfully", newGame });
 };
-
-export const getLeaderboard = async (req: AuthenticatedRequest,res: Response): Promise<Response> => {
-  const leaderboardEntries = await Leaderboard.find().limit(20).sort({ totalScore: -1 });
-
-  const userIds: string[] = leaderboardEntries.map((entry:any) =>entry.userId.toString());
-
-  const { data: usersData }: { data: User[] } = await axios.post("http://user-service:5000/api/user/bulk",{ userIds });
-
-  const leaderboardWithUsers = leaderboardEntries.map((entry: any) => {
-    const user = usersData.find((user) => user._id === entry.userId.toString());
-    return {
-      ...entry.toObject(),
-      user: user ? { name: user.name, profilePic: user.profilePic } : null,
-    };
-  });
-
-  return res.status(200).json({
-    message: "Leaderboard fetched",
-    leaderboard: leaderboardWithUsers,
-  });
-};
-
-export const getLeaderboardByUserId = async(req: AuthenticatedRequest, res:Response):Promise<Response>=> {
-  const userid= req.user?.userId;
-  console.log("game usersid ", userid);
-  const userLeaderboard = await Leaderboard.findOne({userId: userid});
-  if(!userLeaderboard) return res.status(404).json({message: "No leaderboard found for this user"})
-  return res.status(200).json({leaderboard: userLeaderboard, message:"leaderboard fetched successfully"})
-}

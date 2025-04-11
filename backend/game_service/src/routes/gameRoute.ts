@@ -1,8 +1,9 @@
 import express  from "express";
 import { asyncHandler } from "../middleware/asyncHandler";
-import { addGame, createGameSession, getAllGames, getGameBySlug, getLeaderboard, getLeaderboardByUserId, getRecentPlayedGame } from "../controllers/gameController";
 import gameThumbUpload from "../middleware/gameThumbUpload";
 import { isAuthenticate } from "../middleware/verifyToken";
+import { getLeaderboard, getLeaderboardByUserId } from "../controllers/leaderboardController";
+import { addGame, createGameSession, getAllGames, getGameBySlug, getRecentPlayedGame } from "../controllers/gameController";
 
 const gameRouter = express.Router()
 

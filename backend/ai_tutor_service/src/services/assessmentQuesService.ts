@@ -46,8 +46,10 @@ export const getAssessmentQuesService = async (userId?: string) => {
     return { userId, age, level, questions };
 };
 
-export const evaluateAssessmentService = async(data: any) => {
-    const { userId, answers } = data;
+export const evaluateAssessmentService = async(id:string, data: any) => {
+    const userId = id;
+    console.log("consolling userId: ", userId);
+    const {answers} = data;
     console.log("ffff", data);
     
     if (!userId || !answers || !Array.isArray(answers)) {

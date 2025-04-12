@@ -10,6 +10,7 @@ interface ILesson extends Document {
     content?: string;
     duration?: number;
     resources?: string[];
+    notes?: string;
     order: number;
 }
 
@@ -45,6 +46,9 @@ const LessonSchema: Schema = new Schema(
     },
     resources: {
         type: [String]
+    },
+    notes:{
+        type: String
     },
     order: {
         type: Number,

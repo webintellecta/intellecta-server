@@ -1,7 +1,7 @@
 import express from "express";
 import { asyncErrorHandler } from "../middlewares/asyncErrorHandler";
 import { authMiddleware } from "../middlewares/auth"
-import { getAllCourses, getAllCoursesBySubject, getCourseWithLessons, getLessonById, markLessonAsComplete, searchCourses } from "../controller/courseController";
+import { fetchLessonQuiz, generateCourseQuizzesService, getAllCourses, getAllCoursesBySubject, getCourseWithLessons, getLessonById, markLessonAsComplete, searchCourses } from "../controller/courseController";
 
 const courseRouter = express.Router();
 
@@ -12,6 +12,9 @@ courseRouter.get("/:courseId", asyncErrorHandler( getCourseWithLessons));
 courseRouter.get("/lessons/:lessonId", asyncErrorHandler( getLessonById));
 courseRouter.post("/lessons/:lessonId/complete", authMiddleware, asyncErrorHandler(markLessonAsComplete));
 courseRouter.get("/subject/:subject", asyncErrorHandler( getAllCoursesBySubject));
+courseRouter.post("/generate-quiz", asyncErrorHandler(generateCourseQuizzesService));
+courseRouter.get("/fetch-quiz/:courseId", asyncErrorHandler(fetchLessonQuiz));
+
 
 
 export default courseRouter;

@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { errorHandler } from "./middleware/errorHandler";
 import cookieParser from "cookie-parser";
+import adminServiceRouter from "./router/adminRouter";
+
 
 dotenv.config();
 
@@ -16,6 +18,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({extended: true}))
 app.use(cookieParser())
+app.use('/api/admin',adminServiceRouter)
 
 
 app.use(errorHandler as (err: any,req: Request,res: Response, next: NextFunction) => void);

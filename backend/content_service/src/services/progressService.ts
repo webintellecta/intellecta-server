@@ -37,3 +37,14 @@ export const updateLessonProgressService = async( userId: string, courseId: stri
     return { progress }; 
 
 }
+
+export const getUserCourseProgressService = async (userId: string, courseId: string) => {
+    if(!userId || !courseId){
+        throw new CustomError("Please provide the userId, courseId and lessonId",404);
+    }
+    const progress = await UserProgress.findOne({ userId, courseId });
+    if (!progress) {
+        throw new CustomError('No progress found', 404);
+    }
+    return { progress };
+};   

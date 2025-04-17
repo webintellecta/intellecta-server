@@ -45,20 +45,6 @@ export const getLessonByIdService = async( lessonId:string ) => {
     return { lesson };
 }
 
-export const markLessonAsCompleteService = async (lessonId: string, userId: string) => {
-    if (!lessonId) {
-        throw new CustomError("Lesson ID is required", 400);
-    }
-
-    const progress = await LessonProgress.findOneAndUpdate(
-        { lessonId, userId },
-        { completed: true, completedAt: new Date() },
-        { upsert: true, new: true }
-    );
-
-    return { progress };
-};
-
 export const searchCoursesService = async (subject?:string, level?:string) => {
     const query: any = {};
     if (subject) query.subject = subject;

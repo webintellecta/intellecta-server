@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import Course from "../models/coursesModel";
 import { generateQuizzes } from "../utils/geminiService";
 import Quiz from "../models/LessonQuiz";
-import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getFilteredCoursesService, getLessonByIdService, markLessonAsCompleteService, searchCoursesService } from "../services/courseServices";
+import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getFilteredCoursesService, getLessonByIdService, searchCoursesService } from "../services/courseServices";
 import CustomError from "../utils/customError";
 import { mapAgeToGradeAndDifficulty } from "../utils/gradeMapping";
 import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
@@ -68,27 +68,6 @@ export const getLessonById = async(req:Request, res:Response) => {
     res.status(200).json({status: "success", message:'Lesson fetched successfully', data:lesson});
 };
 
-export const markLessonAsComplete = async (req: AuthRequest, res: Response) => {
-    const { lessonId } = req.params;
-    const userId = req.user?._id;
-    console.log("lesson progress", userId);
-
-    if (!userId) {
-        return res.status(401).json({
-          status: "error",
-          message: "User not authenticated",
-        });
-      }
-
-    const { progress } = await markLessonAsCompleteService(lessonId, userId);
-
-    res.status(200).json({
-        status: "success",
-        message: "Lesson marked as complete",
-        data: progress,
-    });
-};
-
 export const searchCourses = async (req: Request, res: Response) => {
   const { subject, level } = req.query;
   const { courses } = await searchCoursesService(
@@ -125,7 +104,7 @@ export const generateCourseQuizzesService = async (
     const { title, subject, description } = course;
   
     const prompt = `
-      Generate 10 multiple choice quiz questions for kids aged 6 to 12.
+      Generate 10 multiple choice quiz questions for kids aged 5 to 18.
       Use the following course information:
       Title: "${title}"
       Subject: "${subject}"

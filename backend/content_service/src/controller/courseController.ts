@@ -30,6 +30,7 @@ export const getAllCourses = async( req: Request, res: Response) => {
 };
 
 export const getAllCoursesBySubject = async(req:AuthRequest, res:Response) => {
+    
     const { subject } = req.params;
     if (!req.user || !req.user._id) {
         throw new CustomError("Unauthorized access. User ID not found.", 401);

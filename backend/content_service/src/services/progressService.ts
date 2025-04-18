@@ -48,3 +48,15 @@ export const getUserCourseProgressService = async (userId: string, courseId: str
     }
     return { progress };
 };   
+
+
+export const getAllUserProgressService = async (userId:string) => {
+    if(!userId){
+        throw new CustomError("your session expired, please login",404)
+    }
+    const progressData = await UserProgress.find({userId:userId})
+    if(!progressData){
+        throw new CustomError("No progress data found", 404)
+    }
+    return progressData
+}

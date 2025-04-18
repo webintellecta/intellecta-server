@@ -122,6 +122,7 @@ export const resetPassword = async (
   res.status(200).json({ message: "Password has been reset" });
 };
 
+// ====================================================================
 //refresh token to access token
 export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;

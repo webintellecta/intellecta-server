@@ -45,7 +45,7 @@ const UserSchema: Schema = new Schema(
     profilePic: { 
         type: String,
         default: null
-    },
+    }
     // refreshToken:{
     //   type:String
     // },

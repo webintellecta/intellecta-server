@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import connectDb from './config/db'
 import "./consumers/userConsumer";
 import "./consumers/getAllUsersConsumer";
+import "./consumers/getAllUsersNotification"
 
 
 dotenv.config()

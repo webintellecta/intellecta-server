@@ -20,25 +20,18 @@ async function connectToRabbitMQ(): Promise<void> {
   }
 }
 
-
-export async function consumeFromQueue(queue: string, callback: (message: any) => void): Promise<void> {
+export async function publishToQueue(queue: string, message: any): Promise<void> {
   try {
     await connectToRabbitMQ();
     if (!channel) throw new Error("Channel is not initialized");
     
     await channel.assertQueue(queue);
-    console.log(`📥 Waiting for messages in queue:in ai service ${queue}...`);
-    
-    channel.consume(queue, (msg: ConsumeMessage | null) => {
-      if (msg) {
-        console.log("🟢 Raw message received:", msg.content.toString("utf-8"));
-        const data = JSON.parse(msg.content.toString("utf-8"));
-        // console.log(`Received message in ai service`, data);
-        callback(data);
-        channel?.ack(msg);
-      }
-    });
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
+    console.log(` notification service need some details ${queue}`);
+    // setTimeout(() => connection.close(), 500);
   } catch (error) {
-    console.error("RabbitMQ Consumer Error:", error);
+    console.error("RabbitMQ Publish Error:", error);
+    throw error;
   }
 }
+

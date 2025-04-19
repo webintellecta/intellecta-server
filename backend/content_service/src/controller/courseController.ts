@@ -172,7 +172,6 @@ export const generateCourseQuizzesService = async (
 export const fetchLessonQuiz = async (req: Request, res: Response) => {
   const { courseId } = req.params;
   const quiz = await Quiz.findOne({ courseId });
-
   if (!quiz) {
     throw new CustomError("NO quiz found for this lesson", 400);
   }
@@ -194,7 +193,10 @@ export const fetchLessonQuiz = async (req: Request, res: Response) => {
 export const getFilteredCourses = async(req: Request, res: Response) => {
     const { subject } = req.params;
     const { gradeLevel, difficultyLevel } = req.query;
-    const { courses } = await getFilteredCoursesService(subject ,gradeLevel as number| undefined, difficultyLevel as string | undefined);
-    res.status(200).json({ status:'success', message:"Filteration is successfull", data:courses});
-};
+  
+    console.log("Received query:", { subject, gradeLevel, difficultyLevel }); 
+
+      const { courses } = await getFilteredCoursesService(subject, gradeLevel as string | undefined, difficultyLevel as string | undefined);
+      res.status(200).json({status: "success", message: "Filtration is successful", data: courses});
+    }
 

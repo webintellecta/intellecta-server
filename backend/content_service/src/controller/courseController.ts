@@ -92,10 +92,13 @@ export const searchCourses = async (req:Request, res:Response) => {
     res.status(200).json({ status:'success', message:"Search is successfull", data:courses});
 };
 
-export const getFilteredCourses = async(req: Request, res: Response) => {
+export const getFilteredCourses = async (req: Request, res: Response) => {
     const { subject } = req.params;
     const { gradeLevel, difficultyLevel } = req.query;
-    const { courses } = await getFilteredCoursesService(subject ,gradeLevel as number| undefined, difficultyLevel as string | undefined);
-    res.status(200).json({ status:'success', message:"Filteration is successfull", data:courses});
-};
+  
+    console.log("Received query:", { subject, gradeLevel, difficultyLevel }); 
+
+      const { courses } = await getFilteredCoursesService(subject, gradeLevel as string | undefined, difficultyLevel as string | undefined);
+      res.status(200).json({status: "success", message: "Filtration is successful", data: courses});
+    }
 

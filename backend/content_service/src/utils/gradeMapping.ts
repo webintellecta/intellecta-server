@@ -2,7 +2,7 @@ export const mapAgeToGradeAndDifficulty = (age: number): { gradeLevel: number, d
     if (age >= 5 && age <= 6) return { gradeLevel: 1, difficultyLevel: "beginner" };
     if (age === 7) return { gradeLevel: 2, difficultyLevel: "beginner" };
     if (age === 8) return { gradeLevel: 3, difficultyLevel: "beginner" };
-    if (age === 9) return { gradeLevel: 4, difficultyLevel: "intermediate" };
+    if (age === 9) return { gradeLevel: 4, difficultyLevel: "beginner" };
     if (age === 10) return { gradeLevel: 5, difficultyLevel: "intermediate" };
     if (age === 11) return { gradeLevel: 6, difficultyLevel: "intermediate" };
     if (age === 12) return { gradeLevel: 7, difficultyLevel: "intermediate" };

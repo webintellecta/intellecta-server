@@ -1,11 +1,11 @@
 import express from "express";
 import { asyncErrorHandler } from "../middlewares/asyncErrorHandler";
 import { authMiddleware } from "../middlewares/auth"
-import { getUserCourseProgress, updateLessonProgress } from "../controller/progressController";
+import { getUserCourseProgress, markLessonAsComplete } from "../controller/progressController";
 
 const progressRouter = express.Router();
 
-progressRouter.post("/update",authMiddleware, asyncErrorHandler( updateLessonProgress ));
+progressRouter.post("/update",authMiddleware, asyncErrorHandler( markLessonAsComplete ));
 progressRouter.get("/:courseId",authMiddleware, asyncErrorHandler( getUserCourseProgress ));
 
 

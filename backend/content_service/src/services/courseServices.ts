@@ -50,20 +50,6 @@ export const getLessonByIdService = async( lessonId:string ) => {
     return { lesson };
 }
 
-export const markLessonAsCompleteService = async (lessonId: string, userId: string) => {
-    if (!lessonId) {
-        throw new CustomError("Lesson ID is required", 400);
-    }
-
-    const progress = await LessonProgress.findOneAndUpdate(
-        { lessonId, userId },
-        { completed: true, completedAt: new Date() },
-        { upsert: true, new: true }
-    );
-
-    return { progress };
-};
-
 export const searchCoursesService = async (subject?:string, level?:string) => {
     const query: any = {};
     if (subject) query.subject = subject;
@@ -76,22 +62,31 @@ export const searchCoursesService = async (subject?:string, level?:string) => {
     return { courses };
 };
 
-export const getFilteredCoursesService = async( subject:string ,gradeLevel?:number, difficultyLevel?:string) => {
+export const getFilteredCoursesService = async (subject: string, gradeLevel?: string, difficultyLevel?: string) => {
     const filter: any = {};
     if (subject) {
-        filter.subject = subject.toLowerCase(); 
+      filter.subject = subject.toLowerCase();
     }
+  
     if (gradeLevel) {
-        filter.gradeLevel = Number(gradeLevel);
+      const grades = gradeLevel.split(",").map((g) => {
+        const gradeNum = Number(g.replace("Grade ", ""));
+        if (isNaN(gradeNum)) throw new CustomError("Invalid grade level", 400);
+        return gradeNum;
+      });
+      filter.gradeLevel = { $in: grades };
     }
   
     if (difficultyLevel) {
-        filter.difficultyLevel = difficultyLevel.toString().toLowerCase(); // ensure match with enum
+      const levels = difficultyLevel.split(",").map((l) => l.toLowerCase());
+      filter.difficultyLevel = { $in: levels };
     }
-
     const courses = await Course.find(filter);
     if (!courses || courses.length === 0) {
-        throw new CustomError("No courses found for the given filters", 404);
+      console.log("No courses found for filter:", filter);
+      throw new CustomError("No courses found for the given filters", 404);
     }
+  
+    console.log("Courses found:", courses.length);
     return { courses };
-};
+  };

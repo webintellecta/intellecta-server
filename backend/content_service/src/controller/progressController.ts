@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import CustomError from "../utils/customError";
 import {
   getUserCourseProgressService,
-  markLessonAsCompleteService 
+  markLessonAsCompleteService, 
+  updateCourseQuizScoreService
 } from "../services/progressService";
 
 interface AuthRequest extends Request {
@@ -25,6 +26,8 @@ export const markLessonAsComplete = async (req: AuthRequest, res: Response) => {
     data: progress,
   });
 };
+
+
 
 // export const updateLessonProgress = async (req: AuthRequest, res: Response) => {
 //   if (!req.user || !req.user._id) {
@@ -68,3 +71,24 @@ export const getUserCourseProgress = async (
       data: progress,
     });
 };
+
+
+
+
+export const quizScoreUpdate = async (req: AuthRequest, res: Response) => {
+  const { courseId, score, totalQuestions = 10 } = req.body;
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new CustomError("User not authenticated", 401);
+  }
+
+  const { progress } = await updateCourseQuizScoreService(userId, courseId, score, totalQuestions);
+
+  res.status(200).json({
+    status: "success",
+    message:"Quiz score updated successfully",
+    data: progress,
+  });
+};
+

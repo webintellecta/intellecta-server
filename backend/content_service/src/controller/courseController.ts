@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getFilteredCoursesService, getLessonByIdService, markLessonAsCompleteService, searchCoursesService } from "../services/courseServices";
+import Course from "../models/coursesModel";
+import { generateQuizzes } from "../utils/geminiService";
+import Quiz from "../models/LessonQuiz";
+import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getFilteredCoursesService, getLessonByIdService, searchCoursesService } from "../services/courseServices";
 import CustomError from "../utils/customError";
 import { mapAgeToGradeAndDifficulty } from "../utils/gradeMapping";
 import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
@@ -18,8 +21,8 @@ interface UserData {
 }
 
 interface AuthRequest extends Request {
-    user?: { _id: string };
-  }
+  user?: { _id: string };
+}
 
 export const getAllCourses = async( req: Request, res: Response) => {
     const { courses } = await getAllCoursesService();
@@ -65,34 +68,129 @@ export const getLessonById = async(req:Request, res:Response) => {
     res.status(200).json({status: "success", message:'Lesson fetched successfully', data:lesson});
 };
 
-export const markLessonAsComplete = async (req: AuthRequest, res: Response) => {
-    const { lessonId } = req.params;
-    const userId = req.user?._id;
-    console.log("lesson progress", userId);
-
-    if (!userId) {
-        return res.status(401).json({
-          status: "error",
-          message: "User not authenticated",
-        });
-      }
-
-    const { progress } = await markLessonAsCompleteService(lessonId, userId);
-
-    res.status(200).json({
-        status: "success",
-        message: "Lesson marked as complete",
-        data: progress,
+export const searchCourses = async (req: Request, res: Response) => {
+  const { subject, level } = req.query;
+  const { courses } = await searchCoursesService(
+    subject as string | undefined,
+    level as string | undefined
+  );
+  res
+    .status(200)
+    .json({
+      status: "success",
+      message: "Search is successfull",
+      data: courses,
     });
 };
 
-export const searchCourses = async (req:Request, res:Response) => {
-    const { subject, level } = req.query;
-    const { courses } = await searchCoursesService(subject as string | undefined,level as string | undefined);
-    res.status(200).json({ status:'success', message:"Search is successfull", data:courses});
-};
 
-export const getFilteredCourses = async (req: Request, res: Response) => {
+export const generateCourseQuizzesService = async (
+    req: Request,
+    res: Response
+  ) => {
+    const { courseId } = req.body;
+  
+    const existingQuiz = await Quiz.findOne({ courseId });
+    if (existingQuiz) {
+      return res.status(200).json({
+        message: "Quiz already exists for this course",
+        questions: existingQuiz.quizzes,
+      });
+    }
+  
+    const course = await Course.findById(courseId);
+    if (!course) throw new CustomError("Course not found", 404);
+  
+    const { title, subject, description } = course;
+  
+    const prompt = `
+      Generate 10 multiple choice quiz questions for kids aged 5 to 18.
+      Use the following course information:
+      Title: "${title}"
+      Subject: "${subject}"
+      Description: "${description}"
+  
+      Output format (JSON only):
+      {
+        "quizzes": [
+          {
+            "question": "Question text?",
+            "options": ["Option A", "Option B", "Option C", "Option D"],
+            "correctAnswer": "Option A",
+            "explanation": "Simple explanation why this is the correct answer",
+            "subject": "${subject}",
+            "difficulty": "easy"
+          }
+        ]
+      }
+  
+      Keep the language simple and fun for kids.
+    `;
+  
+    const aiResponse = await generateQuizzes(prompt);
+  
+    let parsedQuizResponse;
+    try {
+      const cleanedResponse = aiResponse
+        .replace(/```json?/g, "")
+        .replace(/```/g, "")
+        .trim();
+  
+      parsedQuizResponse = JSON.parse(cleanedResponse);
+      if (
+        !Array.isArray(parsedQuizResponse.quizzes) ||
+        parsedQuizResponse.quizzes.length === 0
+      ) {
+        throw new Error("No quizzes found");
+      }
+    } catch (error) {
+      console.error("Failed to parse AI response:", error);
+      throw new CustomError("Invalid AI response format", 500);
+    }
+  
+    const formattedQuestions = parsedQuizResponse.quizzes.map((q: any) => ({
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation,
+      subject: q.subject,
+      difficulty: q.difficulty,
+    }));
+  
+    const newQuiz = await Quiz.create({
+      courseId,
+      quizzes: formattedQuestions,
+    });
+  
+    return res.status(201).json({
+      message: "Quizzes generated and saved",
+      questions: newQuiz.quizzes,
+    });
+  };
+  
+
+export const fetchLessonQuiz = async (req: Request, res: Response) => {
+  const { courseId } = req.params;
+  const quiz = await Quiz.findOne({ courseId });
+  if (!quiz) {
+    throw new CustomError("NO quiz found for this lesson", 400);
+  }
+   function shuffleArray<T>(array: T[]): T[] {
+    return array.sort(() => Math.random() - 0.5);
+  }
+
+  const formatQuizQuestion = quiz.quizzes.map((q: any) => ({
+    question: q.question,
+    options: shuffleArray(q.options),
+    correctAnswer: q.correctAnswer,
+    explanation: q.explanation,
+    subject: q.subject,
+    difficulty: q.difficulty,
+  }));
+
+  return res.status(200).json({ message: "quiz fetched successfully", quiz : formatQuizQuestion });
+};
+export const getFilteredCourses = async(req: Request, res: Response) => {
     const { subject } = req.params;
     const { gradeLevel, difficultyLevel } = req.query;
   

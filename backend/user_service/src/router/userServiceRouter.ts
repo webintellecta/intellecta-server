@@ -8,6 +8,7 @@ import {
   userLogout,
   userRegistration,
   googleAuth,
+  adminLogin,
 } from "../controllers/authController";
 import { asyncHandler } from "../middleware/asyncHandler";
 
@@ -23,6 +24,8 @@ userServiceRouter.post("/register", asyncHandler(userRegistration));
 userServiceRouter.post("/login", asyncHandler(userLogin));
 userServiceRouter.post("/logout", asyncHandler(userLogout));
 userServiceRouter.post("/google-login", asyncHandler(googleAuth));
+userServiceRouter.post("/admin-login", asyncHandler(adminLogin));
+
 
 userServiceRouter.patch("/changepassword",isAuthenticate, asyncHandler(userChangePassword));
 userServiceRouter.get("/getuserbyid", isAuthenticate, asyncHandler(getUserById));

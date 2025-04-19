@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {changePasswordService,loginUserService,logOutUserService,registerUser,} from "../service/authService";
+import {adminLoginService, changePasswordService,loginUserService,logOutUserService,registerUser,} from "../service/authService";
 import CustomError from "../utils/customErrorHandler";
 import User from "../models/userModel";
 import jwt from "jsonwebtoken";
@@ -144,3 +144,8 @@ export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
   }
   return res.status(200).json({ message: "Access token generated", accessToken })
 };
+
+export const adminLogin = async(req: Request, res: Response)=> {
+  const loginData = await adminLoginService(req.body, res);
+  return res.status(200).json({ message: "admin logged in", data: loginData });
+}

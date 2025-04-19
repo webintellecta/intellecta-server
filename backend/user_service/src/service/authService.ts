@@ -1,7 +1,7 @@
 import { Response } from "express";
 import User from "../models/userModel";
 import CustomError from "../utils/customErrorHandler";
-import { generateRefreshToken, generateToken } from "../utils/jwt";
+import { generateAdminToken, generateRefreshToken, generateToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/passwordHash";
 import { JwtPayload } from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
@@ -67,6 +67,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  role?:string;
   age: number;
   save(): Promise<IUser>;
 }
@@ -221,4 +222,37 @@ export const changePasswordService = async (id:string | undefined | JwtPayload ,
     currentUserData.password = hashedPsswd
     await currentUserData.save()
     return {message:"password changed successfully"}
+}
+
+export const adminLoginService = async(data: LoginData, res:Response) : Promise<LoginResponse>=> {
+  const adminExist = await User.findOne({email: data.email}).select("password age role") as IUser | null
+  
+  if(!adminExist){
+    throw new CustomError("Admin not exists",404)
+  }
+  const isAdmin = adminExist.role === "admin";
+  if(!isAdmin){
+    throw new CustomError("You dont have access to Admin Dashboard",401)
+  }
+  const validateUser = await comparePassword(data.password, adminExist.password);
+  if(!validateUser){
+    throw new CustomError("Invalid Credentials",401)
+  }
+
+  const token = generateAdminToken(adminExist._id?.toString()); 
+  
+  res.cookie("session",token,{
+    httpOnly: true,
+    secure: false,
+    maxAge: 24 * 60 * 60 * 60 * 1000,
+  })
+  return {
+    message: "User logged in", 
+    token, 
+    user: {
+        id: adminExist._id.toString(),
+        name: adminExist.name,
+        email: adminExist.email
+  },
+};
 }

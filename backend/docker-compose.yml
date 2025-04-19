@@ -130,6 +130,27 @@ services:
     command: npm run dev  # Runs nodemon for hot-reloading
     restart: unless-stopped
 
+
+  notification_service:
+    build: ./notification_service
+    container_name: notification-service
+    ports:
+      - "5008:5008"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./notification_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+
   api_gateway:
     build: ./api_gateway
     container_name: api_gateway

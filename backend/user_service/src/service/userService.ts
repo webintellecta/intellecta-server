@@ -51,5 +51,3 @@ export const userEditService = async (id: string, data: { name?: string; email?:
         user
     };
 };
-
-

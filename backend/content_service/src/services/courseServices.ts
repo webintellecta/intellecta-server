@@ -8,11 +8,11 @@ export const getAllCoursesService = async () => {
     return { courses };
 };
 
-export const getAllCoursesBySubjectService = async (subject:string) => {
-    if(!subject){
+export const getAllCoursesBySubjectService = async (subject:string, gradeLevel: number) => {
+    if(!subject || !gradeLevel){
         throw new CustomError("Please provide the subject", 404);
     }
-    const courses = await Course.find({ subject });
+    const courses = await Course.find({ subject, gradeLevel });
     if (!courses || courses.length === 0){
         throw new CustomError("There are no course for this subject", 404);
     }
@@ -69,4 +69,24 @@ export const searchCoursesService = async (subject?:string, level?:string) => {
         throw new CustomError("No courses found for the given filters", 404);
     }
     return { courses };
-}
+};
+
+export const getFilteredCoursesService = async( subject:string ,gradeLevel?:number, difficultyLevel?:string) => {
+    const filter: any = {};
+    if (subject) {
+        filter.subject = subject.toLowerCase(); 
+    }
+    if (gradeLevel) {
+        filter.gradeLevel = Number(gradeLevel);
+    }
+  
+    if (difficultyLevel) {
+        filter.difficultyLevel = difficultyLevel.toString().toLowerCase(); // ensure match with enum
+    }
+
+    const courses = await Course.find(filter);
+    if (!courses || courses.length === 0) {
+        throw new CustomError("No courses found for the given filters", 404);
+    }
+    return { courses };
+};

@@ -4,6 +4,7 @@ import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
 import { users } from "../consumers/userConsumer";
 import Notification from "../models/notificationModel"
 import mongoose from 'mongoose';
+import { getUserData } from "../consumers/fetchSpecificUser";
 
 
 interface AuthenticatedRequest extends Request {
@@ -49,16 +50,13 @@ export const sendNotification = async(req:AuthenticatedRequest, res:Response) =>
 
 //to all users 
     if(targetType === 'all'){
-        const notifications = allUsers.map((user) => ({
-            title,
-            message,
-            type,
-            targetType,
-            recipient: user._id,
-          }));
-          await Notification.insertMany(notifications);
-          // console.log(object)
-          return res.status(200).json({ message: 'Notification sent to all users.', notifications });
+      const notification = await Notification.create({
+        title,
+        message,
+        type,
+        targetType
+    });
+          return res.status(200).json({ message: 'Notification sent to all users.', notification });
     }
 
 
@@ -94,8 +92,7 @@ export const sendNotification = async(req:AuthenticatedRequest, res:Response) =>
             message,
             type,
             targetType,
-            targetAgeGroup,
-            recipient: user._id,
+            targetAgeGroup
           }));
 
           await Notification.insertMany(notifications);
@@ -134,22 +131,60 @@ export const sendNotification = async(req:AuthenticatedRequest, res:Response) =>
 
 
 
-export const getAllNotifications = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const userId = req.user?.userId;
+export const getAllNotifications = async (req:AuthenticatedRequest, res:Response) => {
+  
+  const userId = req.user?.userId;
 
-    // If you want to fetch only notifications for the logged-in user:
-    const filter = userId ? { recipient: userId } : {};
-
-    const notifications = await Notification.find();
-
-    return res.status(200).json({
-      success: true,
-      count: notifications.length,
-      notifications,
-    });
-  } catch (error) {
-    console.error("Error fetching notifications:", error);
-    throw new CustomError("Failed to fetch notifications", 500);
+  if (!userId) {
+    throw new CustomError("userId is not found", 400);
   }
-};
+
+  await publishToQueue("GetSpecificUser_Notification_service", userId);
+
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  const userData = await getUserData(userId) as { age: number }
+
+  console.log("userData", userData)
+
+  if (!userData) {
+    throw new CustomError("userData is not found", 400);
+  }
+
+  const age = userData?.age
+
+  const ageFitsGroup = (age: number, group: string): boolean => {
+    const [min, max] = group.split("-").map(Number);
+    return age >= min && age <= max;
+  };
+
+  const allNotifications = await Notification.find({
+    $or: [
+      { targetType: "all" },
+      { targetType: "age-group" },
+      { targetType: "individual", recipient: userId }
+    ]
+  });
+
+  const filteredNotifications = allNotifications.filter((notification) => {
+    if (notification.targetType === "all") return true;
+
+    if (notification.targetType === "age-group" && notification.targetAgeGroup) {
+      return ageFitsGroup(age, notification.targetAgeGroup);
+    }
+
+    if (notification.targetType === "individual") {
+      return notification.recipient?.toString() === userId;
+    }
+
+    return false;
+  });
+
+
+  return res.status(200).json({
+    message: "Notifications fetched successfully",
+    data: filteredNotifications,
+  });
+
+
+}

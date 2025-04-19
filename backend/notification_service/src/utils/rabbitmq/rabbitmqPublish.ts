@@ -27,7 +27,7 @@ export async function publishToQueue(queue: string, message: any): Promise<void>
     
     await channel.assertQueue(queue);
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
-    console.log(` adminService need some details ${queue}`);
+    console.log(` notification service need some details ${queue}`);
     // setTimeout(() => connection.close(), 500);
   } catch (error) {
     console.error("RabbitMQ Publish Error:", error);

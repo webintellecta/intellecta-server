@@ -54,7 +54,7 @@ export const getAllUserProgressService = async (userId:string) => {
     if(!userId){
         throw new CustomError("your session expired, please login",404)
     }
-    const progressData = await UserProgress.find({userId:userId})
+    const progressData = await UserProgress.find({userId:userId}).populate("courseId")
     if(!progressData){
         throw new CustomError("No progress data found", 404)
     }

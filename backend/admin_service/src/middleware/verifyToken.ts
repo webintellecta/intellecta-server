@@ -1,18 +1,12 @@
-import { NextFunction, Request, Response } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import { NextFunction, Request,Response } from "express";
 import CustomError from "../utils/CustomError";
+import jwt, { JwtPayload } from "jsonwebtoken"
 
-//verifying the token
-// interface DecodedToken {
-//     [key: string]: any;
-//   }
 interface CustomRequest extends Request {
-  user?: { userId: string };
+  user?: { userId: string, role: string };
 }
 
-export const isAuthenticate = async (
-  req: CustomRequest,
-  res: Response,
+export const isAuthenticate = async (req: CustomRequest,res: Response,
   next: NextFunction
 ) => {
   const token = req.cookies.token;
@@ -31,9 +25,21 @@ export const isAuthenticate = async (
       return next(new CustomError("Invalid token payload", 401));
     }
 
-    req.user = { userId: decoded._id };
+    req.user = { userId: decoded._id , role: decoded.role};
     next();
   } catch (err) {
     return next(new CustomError(`Invalid or expired token ${err}`, 401));
   }
+};
+
+
+export const isAdmin = (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.user || req.user.role !== "admin") {
+    return next(new CustomError("Access denied. Admins only.", 403));
+  }
+  next();
 };

@@ -1,5 +1,11 @@
 import { NextFunction, Request, Response } from "express";
-import {adminLoginService, changePasswordService,loginUserService,logOutUserService,registerUser,} from "../service/authService";
+import {
+  adminLoginService,
+  changePasswordService,
+  loginUserService,
+  logOutUserService,
+  registerUser,
+} from "../service/authService";
 import CustomError from "../utils/customErrorHandler";
 import User from "../models/userModel";
 import jwt from "jsonwebtoken";
@@ -26,7 +32,7 @@ export const userRegistration = async (req: Request, res: Response) => {
 
 //login
 export const userLogin = async (req: Request, res: Response) => {
-  console.log("req.body", req.body)
+  console.log("req.body", req.body);
   const loginData = await loginUserService(req.body, res);
   return res.status(200).json({ message: "user logged in", data: loginData });
 };
@@ -34,7 +40,13 @@ export const userLogin = async (req: Request, res: Response) => {
 //google login
 export const googleAuth = async (req: Request, res: Response) => {
   const response = await googleAuthentication(req.body, res);
-  res.status(200).json({ status: "success", message: "Successfully logged in with Google", data: response });
+  res
+    .status(200)
+    .json({
+      status: "success",
+      message: "Successfully logged in with Google",
+      data: response,
+    });
 };
 
 //logout
@@ -138,14 +150,28 @@ export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
     throw new CustomError("token verification failed", 404);
   }
 
-  const accessToken = generateRefreshToken(data._id,data.age);
+  const accessToken = generateRefreshToken(data._id, data.age);
   if (!accessToken) {
     throw new CustomError("access token generation failed", 404);
   }
-  return res.status(200).json({ message: "Access token generated", accessToken })
+  return res
+    .status(200)
+    .json({ message: "Access token generated", accessToken });
 };
 
-export const adminLogin = async(req: Request, res: Response)=> {
+export const adminLogin = async (req: Request, res: Response) => {
   const loginData = await adminLoginService(req.body, res);
   return res.status(200).json({ message: "admin logged in", data: loginData });
-}
+};
+
+export const adminLogout = async (req: Request, res: Response) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: false,
+  });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: false,
+  });
+  return res.status(200).json({ message: "user logged out" });
+};

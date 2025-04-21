@@ -7,7 +7,7 @@ interface ICourse extends Document {
     description: string;
     gradeLevel: number;
     difficultyLevel: string;
-    thumbnail?: string; 
+    thumbnail?: string | undefined; 
 } 
 
 

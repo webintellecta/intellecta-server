@@ -2,8 +2,12 @@ import { Request, Response } from "express";
 import CustomError from "../utils/customError";
 import {
   getUserCourseProgressService,
-  markLessonAsCompleteService 
+  markLessonAsCompleteService, 
+  updateCourseQuizScoreService
 } from "../services/progressService";
+import Lesson from "../models/lessonsModel";
+import LessonProgress from "../models/lessonProgressModel";
+import UserProgress from "../models/userProgressModel";
 
 interface AuthRequest extends Request {
   user?: { _id: string };
@@ -25,6 +29,8 @@ export const markLessonAsComplete = async (req: AuthRequest, res: Response) => {
     data: progress,
   });
 };
+
+
 
 // export const updateLessonProgress = async (req: AuthRequest, res: Response) => {
 //   if (!req.user || !req.user._id) {
@@ -68,3 +74,31 @@ export const getUserCourseProgress = async (
       data: progress,
     });
 };
+
+
+
+
+export const quizScoreUpdate = async (req: AuthRequest, res: Response) => {
+  const { courseId, score, totalQuestions = 10 } = req.body;
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new CustomError("User not authenticated", 401);
+  }
+  const existingProgress = await UserProgress.findOne({ userId, courseId });
+  if (existingProgress?.quiz?.attempted && existingProgress.quiz.score >= score) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Your previous score is higher or equal. Resubmission not allowed.",
+    });
+  }
+  
+  const { progress } = await updateCourseQuizScoreService(userId, courseId, score, totalQuestions);
+
+  res.status(200).json({
+    status: "success",
+    message:"Quiz score updated successfully",
+    data: progress,
+  });
+};
+

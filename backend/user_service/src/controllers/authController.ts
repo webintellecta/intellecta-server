@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { hashPassword } from "../utils/passwordHash";
-import { generateToken, verifyToken } from "../utils/jwt";
+import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import { googleAuthentication } from "../service/authService";
 
 dotenv.config();
@@ -138,7 +138,7 @@ export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
     throw new CustomError("token verification failed", 404);
   }
 
-  const accessToken = generateToken(data._id,data.age);
+  const accessToken = generateRefreshToken(data._id,data.age);
   if (!accessToken) {
     throw new CustomError("access token generation failed", 404);
   }

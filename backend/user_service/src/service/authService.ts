@@ -1,7 +1,7 @@
 import { Response } from "express";
 import User from "../models/userModel";
 import CustomError from "../utils/customErrorHandler";
-import { generateAdminToken, generateRefreshToken, generateToken } from "../utils/jwt";
+import { generateRefreshToken, generateToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/passwordHash";
 import { JwtPayload } from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
@@ -36,7 +36,7 @@ export const registerUser = async (data: any , res:Response) => {
     phone: data.phone,
   });
   await newUser.save();
-  const token =  generateToken(newUser._id, Number(newUser.age))
+  const token =  generateToken(newUser._id, Number(newUser.age), newUser.role)
   res.cookie("token", token,{
     httpOnly: true,
     secure: false,
@@ -59,6 +59,7 @@ interface LoginResponse {
       id: string;
       name: string;
       email: string;
+      role?: string;
   };
 }
 
@@ -83,7 +84,7 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
   if (!validateUser) {
     throw new CustomError("Incorrect password", 401);
   }
-  const token = generateToken(userExist._id.toString(),userExist.age); 
+  const token = generateToken(userExist._id.toString(),userExist.age, userExist.role); 
   const refreshToken = generateRefreshToken(userExist._id.toString(), userExist.age);
 
   res.cookie("token",token,{
@@ -151,7 +152,7 @@ export const googleAuthentication = async (data: GoogleAuthData, res: Response) 
     throw new CustomError("User ID not found", 500);
   }
 
-  const token = generateToken(user._id.toString(), Number(user.age));
+  const token = generateToken(user._id.toString(), Number(user.age), user.role);
   const refreshToken = generateRefreshToken(user._id.toString(), Number(user.age))
 
   res.cookie("token",token,{
@@ -232,16 +233,18 @@ export const adminLoginService = async(data: LoginData, res:Response) : Promise<
   }
   const isAdmin = adminExist.role === "admin";
   if(!isAdmin){
-    throw new CustomError("You dont have access to Admin Dashboard",401)
+    throw new CustomError("You don't have access to Admin Dashboard",401)
   }
   const validateUser = await comparePassword(data.password, adminExist.password);
   if(!validateUser){
     throw new CustomError("Invalid Credentials",401)
   }
 
-  const token = generateAdminToken(adminExist._id?.toString()); 
+  const token = generateToken(adminExist._id?.toString(), adminExist.age,  adminExist.role); 
+  console.log(token , "admin token");
   
-  res.cookie("session",token,{
+  
+  res.cookie("token",token,{
     httpOnly: true,
     secure: false,
     maxAge: 24 * 60 * 60 * 60 * 1000,
@@ -252,6 +255,7 @@ export const adminLoginService = async(data: LoginData, res:Response) : Promise<
     user: {
         id: adminExist._id.toString(),
         name: adminExist.name,
+        role: adminExist.role,
         email: adminExist.email
   },
 };

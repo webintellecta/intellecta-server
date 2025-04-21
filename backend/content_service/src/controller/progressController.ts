@@ -5,6 +5,9 @@ import {
   markLessonAsCompleteService, 
   updateCourseQuizScoreService
 } from "../services/progressService";
+import Lesson from "../models/lessonsModel";
+import LessonProgress from "../models/lessonProgressModel";
+import UserProgress from "../models/userProgressModel";
 
 interface AuthRequest extends Request {
   user?: { _id: string };
@@ -82,7 +85,14 @@ export const quizScoreUpdate = async (req: AuthRequest, res: Response) => {
   if (!userId) {
     throw new CustomError("User not authenticated", 401);
   }
-
+  const existingProgress = await UserProgress.findOne({ userId, courseId });
+  if (existingProgress?.quiz?.attempted && existingProgress.quiz.score >= score) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Your previous score is higher or equal. Resubmission not allowed.",
+    });
+  }
+  
   const { progress } = await updateCourseQuizScoreService(userId, courseId, score, totalQuestions);
 
   res.status(200).json({

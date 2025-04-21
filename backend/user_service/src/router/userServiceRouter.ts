@@ -13,13 +13,17 @@ import {
 } from "../controllers/authController";
 import { asyncHandler } from "../middleware/asyncHandler";
 
-import { getBulkUsers, getUserById, profilePictureController, userEditController } from "../controllers/userController";
+import {
+  getBulkUsers,
+  getUserById,
+  profilePictureController,
+  userEditController,
+} from "../controllers/userController";
 
 import { isAuthenticate } from "../middleware/isAuth";
-import {upload} from "../middleware/profilePicUploader"
+import { upload } from "../middleware/profilePicUploader";
 
 const userServiceRouter = express.Router();
-
 
 userServiceRouter.post("/register", asyncHandler(userRegistration));
 userServiceRouter.post("/login", asyncHandler(userLogin));
@@ -28,27 +32,43 @@ userServiceRouter.post("/google-login", asyncHandler(googleAuth));
 userServiceRouter.post("/admin-login", asyncHandler(adminLogin));
 userServiceRouter.post("/admin-logout", asyncHandler(adminLogout));
 
-
-userServiceRouter.patch("/changepassword",isAuthenticate, asyncHandler(userChangePassword));
-userServiceRouter.get("/getuserbyid", isAuthenticate, asyncHandler(getUserById));
-
+userServiceRouter.patch(
+  "/changepassword",
+  isAuthenticate,
+  asyncHandler(userChangePassword)
+);
+userServiceRouter.get(
+  "/getuserbyid",
+  isAuthenticate,
+  asyncHandler(getUserById)
+);
 
 //forgot-password
 userServiceRouter.post("/forgotpassword/:id", asyncHandler(forgotPassword));
-userServiceRouter.post('/resetPassword', asyncHandler(resetPassword));
-
+userServiceRouter.post("/resetPassword", asyncHandler(resetPassword));
 
 //profile-upload
-userServiceRouter.post('/upload-profile', isAuthenticate, upload.single('image'), asyncHandler(profilePictureController));
+userServiceRouter.post(
+  "/upload-profile",
+  isAuthenticate,
+  upload.single("image"),
+  asyncHandler(profilePictureController)
+);
 
 //edit user profile
-userServiceRouter.patch('/edit-profile', isAuthenticate, asyncHandler(userEditController));
+userServiceRouter.patch(
+  "/edit-profile",
+  isAuthenticate,
+  asyncHandler(userEditController)
+);
 
 //access token to refresh token
-userServiceRouter.post("/refreshaccesstoken", asyncHandler(refreshTokeToAccessToken))
+userServiceRouter.post(
+  "/refreshaccesstoken",
+  asyncHandler(refreshTokeToAccessToken)
+);
 
 //get users by bulk ids
-userServiceRouter.post("/bulk", asyncHandler(getBulkUsers))
-
+userServiceRouter.post("/bulk", asyncHandler(getBulkUsers));
 
 export default userServiceRouter;

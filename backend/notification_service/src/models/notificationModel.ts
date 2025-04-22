@@ -30,8 +30,6 @@ const NotificationSchema: Schema<INotification> = new Schema(
     },
     type: {
       type: String,
-      enum: ['info', 'warning', 'announcement'],
-      default: 'info',
     },
     status: {
       type: String,

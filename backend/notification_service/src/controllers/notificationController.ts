@@ -21,9 +21,11 @@ export const sendNotification = async(req:AuthenticatedRequest, res:Response) =>
     
     const userId = req.user?.userId;
 
+
       if (!userId) {
         throw new CustomError("User ID is required", 400);
       }
+
 
     const {
         title,
@@ -35,13 +37,14 @@ export const sendNotification = async(req:AuthenticatedRequest, res:Response) =>
         recipientId,
     } = req.body
 
-    console.log("userId",userId)
-    await publishToQueue("allUserDetailsNotification", userId);
+    if(message){
+      await publishToQueue("allUserDetailsNotification", userId);
+    }
 
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     const allUsers = Array.from(users.values());
-    console.log("allUsers:",allUsers)
+    // console.log("allUsers:",allUsers)
 
 
     if(!title || !message || !type || !targetType){
@@ -61,45 +64,53 @@ export const sendNotification = async(req:AuthenticatedRequest, res:Response) =>
 
 
 //To all users bby catagory
-    if(targetType === 'age-group'){
-        if (!targetAgeGroup) {
-            throw new CustomError("targetGroup is required", 400);
-        }
+if (targetType === 'age-group') {
+  if (!targetAgeGroup) {
+    throw new CustomError("targetGroup is required", 400);
+  }
 
-        let ageRange: [number, number];
+  let ageRange: [number, number];
 
-        switch (targetAgeGroup) {
-            case '5-8':
-              ageRange = [5, 8];
-              break;
-            case '9-12':
-              ageRange = [9, 12];
-              break;
-            case '13-18':
-              ageRange = [13, 18];
-              break;
-            default:
-              return res.status(400).json({ message: 'Invalid age group.' });
-          }
+  switch (targetAgeGroup) {
+    case '5-8':
+      ageRange = [5, 8];
+      break;
+    case '9-12':
+      ageRange = [9, 12];
+      break;
+    case '13-18':
+      ageRange = [13, 18];
+      break;
+    default:
+      return res.status(400).json({ message: 'Invalid age group.' });
+  }
 
-          const filteredUsers = allUsers.filter((user) => {
-            const userAge = user.age;
-            return userAge >= ageRange[0] && userAge <= ageRange[1];
-          });
+  const filteredUsers = allUsers.filter((user) => {
+    const userAge = user.age;
+    return userAge >= ageRange[0] && userAge <= ageRange[1];
+  });
 
-          const notifications = filteredUsers.map((user) => ({
-            title,
-            message,
-            type,
-            targetType,
-            targetAgeGroup
-          }));
+  console.log("Filtered users for age group", targetAgeGroup, ":", filteredUsers);
 
-          await Notification.insertMany(notifications);
-          return res
-            .status(200)
-            .json({ message: `Notification sent to age group ${targetAgeGroup}.` });
-    }
+  try {
+    // Create only one notification for the age group
+    const notification = await Notification.create({
+      title,
+      message,
+      type,
+      targetType,
+    });
+
+    return res.status(200).json({
+      message: `Notification sent to age group ${targetAgeGroup}.`,
+      notification,
+    });
+  } catch (error) {
+    console.error("Error inserting notification:", error);
+    throw new CustomError("Failed to save notification", 500);
+  }
+}
+
 
 
 //TO send individually

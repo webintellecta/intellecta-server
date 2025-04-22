@@ -15,7 +15,7 @@ async function startConsumer() {
         
           if (user) {
             currentUser = new Map(Object.entries(user.toObject())); // Convert user to Map
-            console.log("currentUser details is sending to publish queue", currentUser)
+            console.log("currentUser details is sending to ai_tutor_service", currentUser)
             await publishToQueue("userData", currentUser);
           } else {
             currentUser = null; // Handle case where user is not found

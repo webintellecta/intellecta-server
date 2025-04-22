@@ -2,12 +2,20 @@ import { Request, Response } from "express";
 import Course from "../models/coursesModel";
 import { generateQuizzes } from "../utils/geminiService";
 import Quiz from "../models/LessonQuiz";
-import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getFilteredCoursesService, getLessonByIdService, markLessonAsCompleteService, searchCoursesService } from "../services/courseServices";
+import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getFilteredCoursesService, getLessonByIdService, searchCoursesService } from "../services/courseServices";
 import CustomError from "../utils/customError";
 import { mapAgeToGradeAndDifficulty } from "../utils/gradeMapping";
 import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
 import { getUserData } from "../consumers/userConsumers";
+import { uploadToS3 } from "../middlewares/upload";
 
+// declare global {
+//   namespace Express {
+//     interface Request {
+//       file?: Express.Multer.File;
+//     }
+//   }
+// }
 interface UserData {
     _id: string;
     name: string;
@@ -25,8 +33,25 @@ interface AuthRequest extends Request {
 }
 
 export const getAllCourses = async( req: Request, res: Response) => {
-    const { courses } = await getAllCoursesService();
-    res.status(200).json({status:"success", message:'All Courses fetched successfully', data:courses});
+  const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const { courses, totalCourses } = await getAllCoursesService({ skip, limit });
+    const totalPages = Math.ceil(totalCourses / limit);
+    console.log("good", courses);
+    res.status(200).json({status:"success", message:'All Courses fetched successfully', 
+      data:{
+        courses,
+        pagination: {
+          totalCourses,
+          totalPages,
+          currentPage: page,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+      }
+  });
 };
 
 export const getAllCoursesBySubject = async(req:AuthRequest, res:Response) => {
@@ -54,6 +79,7 @@ export const getAllCoursesBySubject = async(req:AuthRequest, res:Response) => {
       }
     const { gradeLevel, difficultyLevel } = mapAgeToGradeAndDifficulty(age);
     const { courses } = await getAllCoursesBySubjectService(subject, gradeLevel);
+    console.log("ru4",courses);
     res.status(200).json({ status:"success", message: "Courses By Subject fetched succcessfully", data: courses});
 };
 
@@ -67,27 +93,6 @@ export const getLessonById = async(req:Request, res:Response) => {
     const { lessonId } = req.params;
     const { lesson } = await getLessonByIdService(lessonId);
     res.status(200).json({status: "success", message:'Lesson fetched successfully', data:lesson});
-};
-
-export const markLessonAsComplete = async (req: AuthRequest, res: Response) => {
-    const { lessonId } = req.params;
-    const userId = req.user?._id;
-    console.log("lesson progress", userId);
-
-    if (!userId) {
-        return res.status(401).json({
-          status: "error",
-          message: "User not authenticated",
-        });
-      }
-
-    const { progress } = await markLessonAsCompleteService(lessonId, userId);
-
-    res.status(200).json({
-        status: "success",
-        message: "Lesson marked as complete",
-        data: progress,
-    });
 };
 
 export const searchCourses = async (req: Request, res: Response) => {
@@ -126,7 +131,7 @@ export const generateCourseQuizzesService = async (
     const { title, subject, description } = course;
   
     const prompt = `
-      Generate 10 multiple choice quiz questions for kids aged 6 to 12.
+      Generate 10 multiple choice quiz questions for kids aged 5 to 18.
       Use the following course information:
       Title: "${title}"
       Subject: "${subject}"
@@ -194,7 +199,6 @@ export const generateCourseQuizzesService = async (
 export const fetchLessonQuiz = async (req: Request, res: Response) => {
   const { courseId } = req.params;
   const quiz = await Quiz.findOne({ courseId });
-
   if (!quiz) {
     throw new CustomError("NO quiz found for this lesson", 400);
   }
@@ -213,10 +217,30 @@ export const fetchLessonQuiz = async (req: Request, res: Response) => {
 
   return res.status(200).json({ message: "quiz fetched successfully", quiz : formatQuizQuestion });
 };
+
 export const getFilteredCourses = async(req: Request, res: Response) => {
     const { subject } = req.params;
     const { gradeLevel, difficultyLevel } = req.query;
-    const { courses } = await getFilteredCoursesService(subject ,gradeLevel as number| undefined, difficultyLevel as string | undefined);
-    res.status(200).json({ status:'success', message:"Filteration is successfull", data:courses});
+  
+    const { courses } = await getFilteredCoursesService(subject, gradeLevel as string | undefined, difficultyLevel as string | undefined);
+    res.status(200).json({status: "success", message: "Filtration is successful", data: courses});
+};
+
+export const addCourse = async (req: Request, res: Response) => {
+  const file = req.file as Express.Multer.File;
+
+  if (!file) {
+    throw new CustomError("Thumbnail image is required",400);
+  }
+console.log("filesdju", file);
+  const imageUrl = await uploadToS3(file);
+  console.log("imgage", imageUrl);
+console.log("body", req.body)
+  const course = await Course.create({
+    ...req.body,
+    thumbnail: imageUrl,
+  });
+
+  res.status(201).json({status: "success", message: "New course added successfully", data: course});
 };
 

@@ -33,7 +33,7 @@ export async function consumeFromQueue(queue: string, callback: (message: any) =
       if (msg) {
         console.log("🟢 Raw message received:", msg.content.toString("utf-8"));
         const data = JSON.parse(msg.content.toString("utf-8"));
-        console.log(`Received message in ai service`, data);
+        // console.log(`Received message in ai service`, data);
         callback(data);
         channel?.ack(msg);
       }

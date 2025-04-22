@@ -9,10 +9,7 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-export const adminDashboard = async (
-  req: AuthenticatedRequest,
-  res: Response
-) => {
+export const adminDashboard = async ( req: AuthenticatedRequest,res: Response) => {
   const userId = req.user?.userId;
 
 
@@ -143,3 +140,8 @@ export const adminDashboard = async (
     userRegistrationData: graphData,
   });
 };
+
+
+
+
+

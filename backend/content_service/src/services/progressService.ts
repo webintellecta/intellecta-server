@@ -2,6 +2,43 @@ import mongoose from "mongoose";
 import Lesson from "../models/lessonsModel";
 import UserProgress from "../models/userProgressModel";
 import CustomError from "../utils/customError"
+import LessonProgress from "../models/lessonProgressModel";
+
+export const markLessonAsCompleteService = async (userId: string, courseId: string, lessonId: string) => {
+    if (!lessonId || !courseId) {
+        throw new CustomError("Lesson Id and course Id are required", 400);
+    }
+    const lessonProgress = await LessonProgress.findOneAndUpdate(
+        { userId, courseId, lessonId },
+        { completed: true, completedAt: new Date() },
+        { upsert: true, new: true }
+    );
+
+    const totalLessons = await Lesson.countDocuments({ course : courseId});
+    let userProgress = await UserProgress.findOne({ userId, courseId});
+
+    const lessonObjectId = new mongoose.Types.ObjectId(lessonId);
+
+    if (userProgress) {
+        if (!userProgress.completedLessons.includes(lessonObjectId)) {
+            userProgress.completedLessons.push(lessonObjectId);
+        }
+        userProgress.progressPercent = (userProgress.completedLessons.length / totalLessons) * 100;
+        userProgress.currentLesson = lessonObjectId;
+        userProgress.lastUpdated = new Date();
+        await userProgress.save();
+    } else {
+        userProgress = await UserProgress.create({
+          userId,
+          courseId,
+          completedLessons: [lessonObjectId],
+          currentLesson: lessonObjectId,
+          progressPercent: (1 / totalLessons) * 100,
+        });
+    }
+
+    return { progress: lessonProgress };
+}; 
 
 export const updateLessonProgressService = async( userId: string, courseId: string, lessonId: string) => {
     if(!userId || !courseId || !lessonId){
@@ -60,3 +97,23 @@ export const getAllUserProgressService = async (userId:string) => {
     }
     return progressData
 }
+
+export const updateCourseQuizScoreService = async(userId: string, courseId: string, score:number, totalQuestions:number)=> {
+    if (!userId || !courseId || score === undefined || totalQuestions === undefined) {
+        throw new CustomError("Missing required quiz data", 400);
+      }
+      const progress = await UserProgress.findOne({ userId, courseId });
+
+      if (!progress) {
+        throw new CustomError("Please complete lessons before attempting quiz", 404);
+      }
+      progress.quiz = {
+        attempted: true,
+        score,
+        totalQuestions,
+        completedAt: new Date(),
+      };
+      progress.lastUpdated = new Date()
+      await progress.save()
+      return { progress}
+    }

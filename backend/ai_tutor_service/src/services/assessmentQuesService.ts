@@ -3,7 +3,7 @@ import { determineUserLevel } from "../utils/userLevel";
 import CustomError from "../utils/customError";
 import { Document } from "mongoose";
 import Assessment from "../models/assessmentModel";
-import { getUserData } from "../consumers/userConsumer";
+import { getSpecificUserData } from "../consumers/userConsumer";
 import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
 import { generateLearningPath } from "../utils/geminiService";
 
@@ -33,7 +33,7 @@ export const getAssessmentQuesService = async (userId?: string) => {
     }
     await publishToQueue("user_id", userId);
 
-    let userData = (await getUserData(userId)) as UserData | undefined;
+    let userData = (await getSpecificUserData(userId)) as UserData | undefined;
 
     if (!userData) {
         throw new CustomError("User data not found. Try again later.", 400);

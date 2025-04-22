@@ -7,7 +7,7 @@ const users = new Map<string, any>();
 async function startConsumer() {
   console.log("Initializing RabbitMQ consumer...");
 
-  await consumeFromQueue("allUserDetailsNotification", async (data) => {
+  await consumeFromQueue("allUserDetailsToNotification", async (data) => {
     console.log("notification Service received event:", data);
 
     if (Array.isArray(data)) {

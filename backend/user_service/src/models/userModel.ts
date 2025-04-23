@@ -42,6 +42,14 @@ const UserSchema: Schema = new Schema(
       enum: ["student", "parent", "teacher", "admin"],
       default: "student",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
+    isActive: {
+      type: Boolean,
+      default: false
+    },
     profilePic: { 
         type: String,
         default: null

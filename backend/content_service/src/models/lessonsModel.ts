@@ -6,7 +6,7 @@ interface ILesson extends Document {
     title: string;
     type: "video" | "quiz" | "exercise" | "article";
     tags: string[];
-    url?: string;
+    url?: string | null;
     content?: string;
     duration?: number;
     resources?: string[];
@@ -36,7 +36,8 @@ const LessonSchema: Schema = new Schema(
         required: true
     },
     url: {
-        type: String
+        type: String,
+        default: null
     },
     content: {
         type: String

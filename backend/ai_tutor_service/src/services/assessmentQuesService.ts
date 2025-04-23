@@ -26,6 +26,8 @@ interface UserData {
 }
 
 export const getAssessmentQuesService = async (userId?: string) => {
+    console.log("user id", userId)
+    console.log("entering to the service")
     if (!userId) {
         throw new CustomError("Unauthorized: No user ID found", 401);
     }
@@ -43,6 +45,7 @@ export const getAssessmentQuesService = async (userId?: string) => {
     const  age  = userData.age;
     const level = determineUserLevel(age);
     const questions = await AssessmentQuestion.find({ difficulty: level }).limit(15).lean();
+    console.log("questions", questions)
     return { userId, age, level, questions };
 };
 

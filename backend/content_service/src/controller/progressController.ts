@@ -6,6 +6,7 @@ import {
   updateCourseQuizScoreService
 } from "../services/progressService";
 import UserProgress from "../models/userProgressModel";
+import mongoose from "mongoose";
 
 interface AuthRequest extends Request {
   user?: { _id: string };
@@ -28,7 +29,7 @@ export const markLessonAsComplete = async (req: AuthRequest, res: Response) => {
   });
 };
 
-
+  
 // export const updateLessonProgress = async (req: AuthRequest, res: Response) => {
 //   if (!req.user || !req.user._id) {
 //     throw new CustomError("Unauthorized access. User ID not found.", 401);

@@ -3,7 +3,7 @@ import { determineUserLevel } from "../utils/userLevel";
 import CustomError from "../utils/customError";
 import { Document } from "mongoose";
 import Assessment from "../models/assessmentModel";
-import { getUserData } from "../consumers/userConsumer";
+import { getSpecificUserData } from "../consumers/userConsumer";
 import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
 import { generateLearningPath } from "../utils/geminiService";
 
@@ -26,12 +26,14 @@ interface UserData {
 }
 
 export const getAssessmentQuesService = async (userId?: string) => {
+    console.log("user id", userId)
+    console.log("entering to the service")
     if (!userId) {
         throw new CustomError("Unauthorized: No user ID found", 401);
     }
     await publishToQueue("user_id", userId);
 
-    let userData = (await getUserData(userId)) as UserData | undefined;
+    let userData = (await getSpecificUserData(userId)) as UserData | undefined;
 
     if (!userData) {
         throw new CustomError("User data not found. Try again later.", 400);
@@ -43,6 +45,7 @@ export const getAssessmentQuesService = async (userId?: string) => {
     const  age  = userData.age;
     const level = determineUserLevel(age);
     const questions = await AssessmentQuestion.find({ difficulty: level }).limit(15).lean();
+    console.log("questions", questions)
     return { userId, age, level, questions };
 };
 

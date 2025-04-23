@@ -8,7 +8,9 @@ interface AuthRequest extends Request {
   
 export const getAssessmentQuestions = async (req: AuthRequest, res: Response ): Promise<void>  => {
   console.log("getAssessmentQuestions");
+  console.log("req",req.user)
   const { userId, age, level, questions } = await getAssessmentQuesService(req.user?._id);
+  console.log("questions", questions)
   res.status(200).json({
     status: "success",
     message: "Assessment Questions",

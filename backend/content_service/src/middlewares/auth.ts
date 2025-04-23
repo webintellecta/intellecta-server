@@ -20,7 +20,9 @@ export const authMiddleware = (
     const tokenFromHeader = authHeader?.startsWith('Bearer ') 
     ? authHeader.substring(7) 
     : null;
+    console.log("token Header",tokenFromHeader , tokenFromCookie)
     const token = tokenFromCookie || tokenFromHeader; 
+    console.log("token", token)
     if (!token) {
       res.status(401).json({ message: "Access Denied. No token provided." });
       return;

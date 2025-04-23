@@ -13,6 +13,7 @@ export const getUserById = async (req:Request , res:Response) => {
     res.status(200).json({success:true, message:userData.message, data:userData})
 }
 
+
 interface AuthenticatedRequest extends Request {
     user?: { userId: string }; 
 }
@@ -54,15 +55,47 @@ export const getBulkUsers = async (req:Request, res:Response) :Promise<Response>
 
 
 //Get all users
-export const getAllUsers = async (req:Request, res:Response) :Promise<Response> => {
-    const users = await User.find()
-    if (!users) {
-        throw new CustomError("No user is found", 400);
+
+
+export const getAllUsers = async (req: Request, res: Response): Promise<Response> => {
+
+    const {
+      page = "1",
+      limit = "10",
+      isBlock,
+      search,
+    } = req.query as {
+      page?: string;
+      limit?: string;
+      isBlock?: string;
+      search?: string;
+    };
+
+    const currentPage = parseInt(page, 10);
+    const itemsPerPage = parseInt(limit, 10);
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    const filter: any = {};
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } }
+      ];
     }
 
+    if (isBlock !== undefined) {
+      filter.isBlock = isBlock === "true";
+    }
+
+    const users = await User.find(filter).skip(skip).limit(itemsPerPage);
+    const totalUsers = await User.countDocuments(filter);
+
     return res.status(200).json({
-        status: "success",
-        message:"getted all users",
-        data: users
-    })
+      success: true,
+      currentPage,
+      totalPages: Math.ceil(totalUsers / itemsPerPage),
+      totalUsers,
+      users,
+    });
 };

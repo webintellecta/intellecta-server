@@ -240,9 +240,7 @@ export const adminLoginService = async(data: LoginData, res:Response) : Promise<
     throw new CustomError("Invalid Credentials",401)
   }
 
-  const token = generateToken(adminExist._id?.toString(), adminExist.age,  adminExist.role); 
-  console.log(token , "admin token");
-  
+  const token = generateToken(adminExist._id?.toString(), adminExist.age,  adminExist.role);   
   
   res.cookie("token",token,{
     httpOnly: true,

@@ -86,6 +86,18 @@ export const getUserCourseProgressService = async (userId: string, courseId: str
     return { progress };
 };   
 
+
+export const getAllUserProgressService = async (userId:string) => {
+    if(!userId){
+        throw new CustomError("your session expired, please login",404)
+    }
+    const progressData = await UserProgress.find({userId:userId}).populate("courseId")
+    if(!progressData){
+        throw new CustomError("No progress data found", 404)
+    }
+    return progressData
+}
+
 export const updateCourseQuizScoreService = async(userId: string, courseId: string, score:number, totalQuestions:number)=> {
     if (!userId || !courseId || score === undefined || totalQuestions === undefined) {
         throw new CustomError("Missing required quiz data", 400);
@@ -104,4 +116,4 @@ export const updateCourseQuizScoreService = async(userId: string, courseId: stri
       progress.lastUpdated = new Date()
       await progress.save()
       return { progress}
-}
+    }

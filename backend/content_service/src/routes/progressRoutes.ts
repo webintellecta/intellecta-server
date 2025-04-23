@@ -10,5 +10,7 @@ progressRouter.get("/top", asyncErrorHandler( getTopCourses ));
 progressRouter.get("/:courseId",authMiddleware, asyncErrorHandler( getUserCourseProgress ));
 progressRouter.post("/update/quiz-score",authMiddleware, asyncErrorHandler( quizScoreUpdate ));
 
+progressRouter.get("/allusercourse/aa",authMiddleware,asyncErrorHandler(getAllUserCourseProgress))
+
 
 export default progressRouter;

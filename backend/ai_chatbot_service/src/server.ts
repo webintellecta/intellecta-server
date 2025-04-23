@@ -39,6 +39,7 @@ io.on("connection", (socket) => {
             );
 
             // Extract AI response and send it back to the user
+            // console.log("response", response.data?.choices[0])
             socket.emit("reply", response.data?.choices[0].message.content);
         } catch (error) {
             console.error("Error:", error);

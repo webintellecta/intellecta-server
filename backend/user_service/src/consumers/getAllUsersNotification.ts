@@ -12,14 +12,14 @@ async function startConsumer() {
       console.log(users)
       if (users) {
         console.log("Sending user list to notification service");
-        await publishToQueue("allUserDetailsNotification", users);
+        await publishToQueue("allUserDetailsToNotification", users);
       } else {
         console.warn("No users found");
-        await publishToQueue("allUserDetailsNotification", []);
+        await publishToQueue("allUserDetailsToNotification", []);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
-      await publishToQueue("allUserDetailsNotification", []);
+      await publishToQueue("allUserDetailsToNotification", []);
     }
   });
 }

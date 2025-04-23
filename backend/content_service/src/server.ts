@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import connectDB from "./config/db";
 import app from "./app";
+import "./consumers/userProgress";
 
 dotenv.config();
 

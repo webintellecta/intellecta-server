@@ -3,6 +3,7 @@ import { asyncErrorHandler } from "../middlewares/asyncErrorHandler";
 import { authMiddleware } from "../middlewares/auth"
 import { getTopCourses, getUserCourseProgress, markLessonAsComplete, quizScoreUpdate } from "../controller/progressController";
 
+
 const progressRouter = express.Router();
 
 progressRouter.post("/update",authMiddleware, asyncErrorHandler( markLessonAsComplete ));

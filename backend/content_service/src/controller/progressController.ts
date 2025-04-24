@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import CustomError from "../utils/customError";
-import { getAllUserProgressService, getUserCourseProgressService, markLessonAsCompleteService, updateCourseQuizScoreService, updateLessonProgressService } from "../services/progressService";
+import {
+  getUserCourseProgressService,
+  markLessonAsCompleteService, 
+  updateCourseQuizScoreService
+} from "../services/progressService";
 import UserProgress from "../models/userProgressModel";
 import mongoose from "mongoose";
 
@@ -24,23 +28,6 @@ export const markLessonAsComplete = async (req: AuthRequest, res: Response) => {
     data: progress,
   });
 };
-
-
-
-//all attempted course of a particular user
-export const getAllUserCourseProgress = async(req:AuthRequest, res:Response)=>{
-    console.log("hello")
-    if (!req.user || !req.user._id) {
-        throw new CustomError("Unauthorized access. User ID not found.", 401);
-    }
-    const userId = req.user._id;
-    if(!mongoose.Types.ObjectId.isValid(userId)){
-        throw new CustomError("user id format Invalid",401)
-    }
-    const progressData = await getAllUserProgressService(userId)
-
-    res.status(200).json({status:"success", message:"progress data fetched", data:progressData})
-}
 
   
 // export const updateLessonProgress = async (req: AuthRequest, res: Response) => {
@@ -87,8 +74,6 @@ export const getUserCourseProgress = async (
 };
 
 
-
-
 export const quizScoreUpdate = async (req: AuthRequest, res: Response) => {
   const { courseId, score, totalQuestions = 10 } = req.body;
   const userId = req.user?._id;
@@ -113,3 +98,40 @@ export const quizScoreUpdate = async (req: AuthRequest, res: Response) => {
   });
 };
 
+export const getTopCourses = async (req: Request, res: Response) => {
+    const topCourses = await UserProgress.aggregate([
+      {
+        $group: {
+          _id: "$courseId",
+          userCount: { $sum: 1 },
+        },
+      },
+      { $sort: { userCount: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: "courses",
+          localField: "_id",
+          foreignField: "_id",
+          as: "course",
+        },
+      },
+      {
+        $unwind: "$course",
+      },
+      {
+        $project: {
+          _id: 0,
+          courseId: "$course._id",
+          title: "$course.title",
+          userCount: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "Top courses fetched successfully",
+      data: topCourses,
+    });
+};

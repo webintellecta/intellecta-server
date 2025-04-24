@@ -92,3 +92,15 @@ export const editLesson = async (req: Request, res: Response) => {
     lesson: updatedLesson,
   });
 };
+
+export const deleteLesson = async (req: Request, res: Response)=> {
+  const { lessonId } = req.params;
+
+  const lesson = await Lesson.findByIdAndDelete(lessonId);
+
+  if (!lesson) {
+    throw new CustomError("Lesson not found.", 404);
+  }
+
+  return res.status(200).json({ message: "Lesson deleted successfully." });
+};

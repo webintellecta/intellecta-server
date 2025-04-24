@@ -22,7 +22,7 @@ export const getallUsers = async(req: AuthenticatedRequest, res: Response) => {
 
   await new Promise((resolve) => setTimeout(resolve, 1500));
 
-  const allUsers = Array.from(users.values());
+  const allUsers = Array.from(users.values()).filter(user => !user.isDeleted);
 
   if (!allUsers.length) {
     return res.status(404).json({ message: "No users found." });

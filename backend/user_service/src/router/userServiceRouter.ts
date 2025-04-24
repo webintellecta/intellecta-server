@@ -14,6 +14,8 @@ import {
 import { asyncHandler } from "../middleware/asyncHandler";
 
 import {
+  deleteUser,
+  getAllUsers,
   getBulkUsers,
   getUserById,
   profilePictureController,
@@ -70,5 +72,10 @@ userServiceRouter.post(
 
 //get users by bulk ids
 userServiceRouter.post("/bulk", asyncHandler(getBulkUsers));
+
+userServiceRouter.get("/allusers", isAuthenticate, asyncHandler(getAllUsers))
+
+//soft deleting the user 
+userServiceRouter.post("/delete-user",isAuthenticate, asyncHandler(deleteUser) )
 
 export default userServiceRouter;

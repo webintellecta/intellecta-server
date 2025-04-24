@@ -5,6 +5,7 @@ import courseRoutes from "./routes/courseRoutes";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import cookieParser from "cookie-parser";
 import progressRoutes from "./routes/progressRoutes";
+import lessonRoutes from "./routes/lessonRoutes";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(cookieParser());
 
 app.use("/api/courses", courseRoutes);
 app.use("/api/progress", progressRoutes);
+app.use("/api/lessons", lessonRoutes);
 
 const errorHandlerMiddleware: ErrorRequestHandler = (err, req, res, next) => {
     globalErrorHandler(err, req, res, next);

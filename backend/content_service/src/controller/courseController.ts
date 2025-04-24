@@ -37,11 +37,33 @@ interface AuthRequest extends Request {
 export const getAllCourses = async( req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
+    const subject = (req.query.subject as string)
+    const grade = parseInt(req.query.grade as string);
     const skip = (page - 1) * limit;
+    const search = (req.query.search as string)
 
-    const { courses, totalCourses } = await getAllCoursesService({ skip, limit });
+    console.log("query.grade raw value:", req.query.search);
+
+    const filter: any = {};
+
+    const validSubjects = ["maths", "science", "english", "coding", "history"];
+    if (subject && validSubjects.includes(subject)) {
+      filter.subject = subject;
+    }
+
+    if (!isNaN(grade)) {
+      filter.gradeLevel = grade;
+    }
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } }
+      ];
+    }
+    
+    const { courses, totalCourses } = await getAllCoursesService({ skip, limit, filter });
     const totalPages = Math.ceil(totalCourses / limit);
-    console.log("good", courses);
+    // console.log("good", courses);
     res.status(200).json({status:"success", message:'All Courses fetched successfully', 
       data:{
         courses,
@@ -65,7 +87,7 @@ export const getAllCoursesBySubject = async(req:AuthRequest, res:Response) => {
     const userId = req.user._id;
       
     await publishToQueue("user_id", userId);
-
+``
     let userData = (await getUserData(userId)) as UserData | undefined;
 
     if (!userData) {
@@ -246,3 +268,29 @@ console.log("body", req.body)
   res.status(201).json({status: "success", message: "New course added successfully", data: course});
 };
 
+export const editCourse = async (req: Request, res: Response) => {
+  const { courseId } = req.params;
+  const file = req.file as Express.Multer.File;
+
+  let updatedFields: any = { ...req.body };
+
+  if (file) {
+    const imageUrl = await uploadToS3(file);
+    updatedFields.thumbnail = imageUrl;
+  }
+
+  const course = await Course.findByIdAndUpdate(courseId, updatedFields, {
+    new: true, // return the updated document
+    runValidators: true, // run schema validators
+  });
+
+  if (!course) {
+    throw new CustomError("Course not found", 404);
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "Course updated successfully",
+    data: course,
+  });
+};

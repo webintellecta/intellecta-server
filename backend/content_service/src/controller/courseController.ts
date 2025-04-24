@@ -266,3 +266,29 @@ console.log("body", req.body)
   res.status(201).json({status: "success", message: "New course added successfully", data: course});
 };
 
+export const editCourse = async (req: Request, res: Response) => {
+  const { courseId } = req.params;
+  const file = req.file as Express.Multer.File;
+
+  let updatedFields: any = { ...req.body };
+
+  if (file) {
+    const imageUrl = await uploadToS3(file);
+    updatedFields.thumbnail = imageUrl;
+  }
+
+  const course = await Course.findByIdAndUpdate(courseId, updatedFields, {
+    new: true, // return the updated document
+    runValidators: true, // run schema validators
+  });
+
+  if (!course) {
+    throw new CustomError("Course not found", 404);
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "Course updated successfully",
+    data: course,
+  });
+};

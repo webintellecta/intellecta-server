@@ -26,8 +26,10 @@ export const adminDashboard = async (
   await new Promise((resolve) => setTimeout(resolve, 1500));
 
   const allUsers = Array.from(users.values());
+  const filteredUsers = allUsers.filter(user => user.role === "student");
 
-  if (!allUsers.length) {
+
+  if (!filteredUsers.length) {
     return res.status(404).json({ message: "No users found." });
   }
 
@@ -56,7 +58,7 @@ export const adminDashboard = async (
     "Dec",
   ];
 
-  allUsers.forEach((user) => {
+  filteredUsers.forEach((user) => {
     const createdAt = new Date(user.createdAt);
 
     // DAY: group by hour
@@ -111,13 +113,13 @@ export const adminDashboard = async (
   //Students count
 
   const studentCategory = {
-    total: allUsers.length,
+    total: filteredUsers.length,
     first: 0,
     second: 0,
     third: 0,
   };
 
-  allUsers.forEach((user) => {
+  filteredUsers.forEach((user) => {
     const age = user?.age;
 
     if (typeof age === "number") {

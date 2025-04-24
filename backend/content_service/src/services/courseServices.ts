@@ -7,6 +7,7 @@ import { generatePresignedUrl } from "../middlewares/upload";
 interface PaginationParams {
   skip: number;
   limit: number;
+  filter?: Record<string, any>; 
 }
 
 const isS3ObjectKey = (thumbnail: string): boolean => {
@@ -16,9 +17,10 @@ const isS3ObjectKey = (thumbnail: string): boolean => {
 export const getAllCoursesService = async ({
   skip,
   limit,
+  filter = {},
 }: PaginationParams) => {
-  const courses = await Course.find().skip(skip).limit(limit);
-  const totalCourses = await Course.countDocuments();
+  const courses = await Course.find(filter).skip(skip).limit(limit);
+  const totalCourses = await Course.countDocuments(filter);
 
   const coursesWithPresignedUrls = await Promise.all(
     courses.map(async (course) => {
@@ -34,11 +36,14 @@ export const getAllCoursesService = async ({
       } else {
         courseData.thumbnail = undefined;
       }
-     return courseData;
+
+      return courseData;
     })
   );
-    return { courses: coursesWithPresignedUrls, totalCourses };
+
+  return { courses: coursesWithPresignedUrls, totalCourses };
 };
+
 
 export const getAllCoursesBySubjectService = async (
   subject: string,

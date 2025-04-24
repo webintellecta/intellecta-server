@@ -46,3 +46,49 @@ export const addLesson = async (req: Request, res: Response) => {
     lesson: savedLesson,
   });
 };
+
+
+export const editLesson = async (req: Request, res: Response) => {
+  const { lessonId } = req.params;
+  const { title, type, content, resources, notes, order } = req.body;
+
+  const lesson = await Lesson.findById(lessonId);
+  if (!lesson) {
+    throw new CustomError("Lesson not found.", 404);
+  }
+
+  let videoUrl = lesson.url; // default to existing video
+
+  if (req.file) {
+    try {
+      const s3Key = await uploadToS3(req.file);
+      const presignedUrl = await generatePresignedUrl(s3Key);
+      if (!presignedUrl) {
+        throw new CustomError("Failed to generate video URL.", 500);
+      }
+      videoUrl = presignedUrl;
+    } catch (error) {
+      console.error("Error uploading video to S3:", error);
+      throw new CustomError("Failed to upload video.", 500);
+    }
+  }
+
+  const updatedLesson = await Lesson.findByIdAndUpdate(
+    lessonId,
+    {
+      title,
+      type,
+      url: videoUrl,
+      content,
+      resources,
+      notes,
+      order,
+    },
+    { new: true, runValidators: true }
+  );
+
+  res.status(200).json({
+    message: "Lesson updated successfully.",
+    lesson: updatedLesson,
+  });
+};

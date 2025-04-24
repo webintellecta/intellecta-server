@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { getUserByIdService, profilePictureService, userEditService  } from "../service/userService";
 import CustomError from "../utils/customErrorHandler";
 import User from "../models/userModel";
+import { generatePresignedUrl } from "../middleware/profilePicUploader";
 
 //Get User
 export const getUserById = async (req:Request , res:Response) => {
@@ -79,6 +80,7 @@ export const getAllUsers = async (req: AuthenticatedRequest, res: Response): Pro
 
     const filter: any = {
       isDeleted: { $ne: true },
+      role: "student"
     };
 
 
@@ -104,6 +106,14 @@ export const getAllUsers = async (req: AuthenticatedRequest, res: Response): Pro
 
     const users = await User.find(filter).skip(skip).limit(itemsPerPage);
     const totalUsers = await User.countDocuments(filter);
+
+    await Promise.all(
+      users.map(async (user) => {
+        if (user.profilePic) {
+          user.profilePic = await generatePresignedUrl(user.profilePic);
+        }
+      })
+    );
 
     return res.status(200).json({
       success: true,

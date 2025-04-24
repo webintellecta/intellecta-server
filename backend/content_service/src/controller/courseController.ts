@@ -9,13 +9,15 @@ import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
 import { getUserData } from "../consumers/userConsumers";
 import { uploadToS3 } from "../middlewares/upload";
 
-// declare global {
-//   namespace Express {
-//     interface Request {
-//       file?: Express.Multer.File;
-//     }
-//   }
-// }
+
+
+declare global {
+  namespace Express {
+    interface Request {
+      file?: Express.Multer.File;
+    }
+  }
+}
 interface UserData {
     _id: string;
     name: string;

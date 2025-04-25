@@ -1,0 +1,209 @@
+version: '3.8'
+
+services:
+  user-service:
+    build: ./user_service
+    container_name: user-service
+    ports:
+      - "5000:5000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+      #new code 
+    volumes:
+      - ./user_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+
+  game-service:
+    build: ./game_service
+    container_name: game-service
+    ports:
+      - "5002:5002"
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./game_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./game_service
+          target: /app
+        - action: rebuild
+          path: ./game_service/package.json
+
+  ai-tutor-service:
+    build: ./ai_tutor_service
+    container_name: ai-tutor-service
+    ports:
+      - "5001:5001"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      user-service:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./ai_tutor_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+
+  content_service:
+    build: ./content_service
+    container_name: content_service
+    ports:
+      - "5005:5005"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./content_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+
+
+  ai-chatbot-service:
+    build: ./ai_chatbot_service
+    container_name: ai-chatbot-service
+    ports:
+      - "5004:5004"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./ai_chatbot_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+  
+  admin_service:
+    build: ./admin_service
+    container_name: admin-service
+    ports:
+      - "5006:5006"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./admin_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+
+
+  notification_service:
+    build: ./notification_service
+    container_name: notification-service
+    ports:
+      - "5008:5008"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./notification_service:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+
+  api_gateway:
+    build: ./api_gateway
+    container_name: api_gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - intellecta-network
+    env_file:
+      - .env
+    volumes:
+      - ./api_gateway:/app
+      - /app/node_modules  # Prevents overwriting node_modules
+    command: npm run dev  # Runs nodemon for hot-reloading
+    restart: unless-stopped
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "admin"
+      RABBITMQ_DEFAULT_PASS: "password"
+    networks:
+      - intellecta-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - intellecta-network
+    restart: unless-stopped
+    volumes:
+      - mongodb-data:/data/db
+
+networks:
+  intellecta-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local

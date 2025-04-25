@@ -1,7 +1,7 @@
 import * as amqplib from "amqplib";
 import { Channel, ConsumeMessage } from "amqplib";
 
-const RABBITMQ_URL = "amqp://admin:password@rabbitmq:5672";
+const RABBITMQ_URL = "amqps://gdtwxeui:3UnJrv2d5M1lHN4Ro9TZ8FFI2BDO6M86@leopard.lmq.cloudamqp.com/gdtwxeui";
 
 export async function consumeFromQueue(queue: string, callback: (message: any) => void): Promise<void> {
   try {

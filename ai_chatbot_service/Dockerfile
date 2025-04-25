@@ -19,6 +19,9 @@ ENV PATH="./node_modules/.bin:$PATH"
 # Copy the rest of the app
 COPY . .
 
+# testing tsc version
+RUN npx tsc --version
+
 # Build the TypeScript project
 RUN npm run build
 

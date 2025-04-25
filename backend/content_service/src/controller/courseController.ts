@@ -60,6 +60,7 @@ export const getAllCourses = async( req: Request, res: Response) => {
         { title: { $regex: search, $options: "i" } }
       ];
     }
+    filter.isDeleted = false;
     
     const { courses, totalCourses } = await getAllCoursesService({ skip, limit, filter });
     const totalPages = Math.ceil(totalCourses / limit);
@@ -78,34 +79,98 @@ export const getAllCourses = async( req: Request, res: Response) => {
   });
 };
 
-export const getAllCoursesBySubject = async(req:AuthRequest, res:Response) => {
+// export const getAllCoursesBySubject = async(req:AuthRequest, res:Response) => {
     
-    const { subject } = req.params;
-    if (!req.user || !req.user._id) {
-        throw new CustomError("Unauthorized access. User ID not found.", 401);
-      }
-    const userId = req.user._id;
+//     const { subject } = req.params;
+//     if (!req.user || !req.user._id) {
+//         throw new CustomError("Unauthorized access. User ID not found.", 401);
+//       }
+//     const userId = req.user._id;
       
-    await publishToQueue("user_id", userId);
-``
-    let userData = (await getUserData(userId)) as UserData | undefined;
+//     await publishToQueue("user_id", userId);
+//     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    if (!userData) {
-        throw new CustomError("User data not found. Try again later.", 400);
-    }
+//     let userData = (await getUserData(userId)) as UserData | undefined;
 
-    if (userData instanceof Map) {
-        userData = Object.fromEntries(userData) as UserData;
-    }
-    const  age  = userData.age;
-    if (!age) {     
-        throw new CustomError("User age not found in token", 400);
-      }
-    const { gradeLevel, difficultyLevel } = mapAgeToGradeAndDifficulty(age);
-    const { courses } = await getAllCoursesBySubjectService(subject, gradeLevel);
-    console.log("ru4",courses);
-    res.status(200).json({ status:"success", message: "Courses By Subject fetched succcessfully", data: courses});
+//     if (!userData) {
+//         throw new CustomError("User data not found. Try again later.", 400);
+//     }
+
+//     if (userData instanceof Map) {
+//         userData = Object.fromEntries(userData) as UserData;
+//     }
+//     const  age  = userData.age;
+//     if (!age) {     
+//         throw new CustomError("User age not found in token", 400);
+//       }
+//     const { gradeLevel, difficultyLevel } = mapAgeToGradeAndDifficulty(age);
+//     const { courses } = await getAllCoursesBySubjectService(subject, gradeLevel);
+//     console.log("ru4",courses);
+//     return res.status(200).json({ status:"success", message: "Courses By Subject fetched succcessfully", data: courses});
+// };
+
+
+export const getAllCoursesBySubject = async (req: AuthRequest, res: Response) => {
+  console.log("Step 1: Request Received");
+
+  const { subject } = req.params;
+
+  if (!req.user || !req.user._id) {
+    throw new CustomError("Unauthorized access. User ID not found.", 401);
+  }
+
+  const userId = req.user._id;
+
+  // Publishing to queue asynchronously (non-blocking)
+  console.log("Step 2: Publishing to queue...");
+  publishToQueue("user_id", userId);
+  console.log("Step 2: Queue published.");
+
+  // Fetch user data
+  console.log("Step 3: Fetching user data...");
+  let userData;
+  try {
+    userData = await getUserData(userId) as UserData;
+  } catch (err) {
+    console.error("Error fetching user data:", err);
+    throw new CustomError("User data not found. Try again later.", 400);
+  }
+
+  if (!userData) {
+    throw new CustomError("User data not found. Try again later.", 400);
+  }
+
+  console.log("Step 4: User data fetched, processing age...");
+  if (userData instanceof Map) {
+    userData = Object.fromEntries(userData) as UserData;
+  }
+
+  const age = userData.age;
+  if (!age) {
+    throw new CustomError("User age not found in token", 400);
+  }
+
+  // Fetch courses by subject and gradeLevel
+  console.log("Step 5: Mapping age to gradeLevel and difficultyLevel...");
+  const { gradeLevel, difficultyLevel } = mapAgeToGradeAndDifficulty(age);
+
+  console.log("Step 6: Fetching courses...");
+  let courses;
+  try {
+    courses = await getAllCoursesBySubjectService(subject, gradeLevel);
+  } catch (err) {
+    console.error("Error fetching courses:", err);
+    throw new CustomError("Error fetching courses by subject.", 500);
+  }
+
+  console.log("Step 7: Courses fetched, sending response.");
+  res.status(200).json({
+    status: "success",
+    message: "Courses by subject fetched successfully",
+    data: courses,
+  });
 };
+
 
 export const getCourseWithLessons = async(req:Request, res:Response) => {
     const { courseId } = req.params;
@@ -256,10 +321,7 @@ export const addCourse = async (req: Request, res: Response) => {
   if (!file) {
     throw new CustomError("Thumbnail image is required",400);
   }
-console.log("filesdju", file);
   const imageUrl = await uploadToS3(file);
-  console.log("imgage", imageUrl);
-console.log("body", req.body)
   const course = await Course.create({
     ...req.body,
     thumbnail: imageUrl,
@@ -291,6 +353,25 @@ export const editCourse = async (req: Request, res: Response) => {
   res.status(200).json({
     status: "success",
     message: "Course updated successfully",
+    data: course,
+  });
+};
+
+export const deleteCourse = async (req: Request, res: Response) => {
+  const { courseId } = req.params;
+
+  if (!courseId) {
+    throw new CustomError("Course not found", 404);
+  }
+  const course = await Course.findByIdAndUpdate(courseId, {$set: {isDeleted: true}},{new:true})
+
+  if (!course) {
+    throw new CustomError("Course not found", 404);
+  }
+
+  return res.status(200).json({
+    status: "success",
+    message: "Course deleted successfully",
     data: course,
   });
 };

@@ -6,7 +6,7 @@ async function startConsumer() {
   console.log("Initializing RabbitMQ consumer...");
 
   // ✅ Listen to the response queue (where the user-service sends details)
-  await consumeFromQueue("userData", async (users) => {
+  await consumeFromQueue("adminUserData", async (users) => {
     if (users && Array.isArray(users)) {
       // Store by userId for quick lookup
       users.forEach((user) => {

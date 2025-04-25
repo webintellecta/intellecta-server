@@ -1,43 +1,30 @@
 import * as amqplib from "amqplib";
-import { Connection, Channel, ConsumeMessage } from "amqplib";
+import { Channel, ConsumeMessage } from "amqplib";
 
 const RABBITMQ_URL = "amqp://admin:password@rabbitmq:5672";
 
-let connection: Connection | null = null;
-let channel: Channel | null = null;
-
-async function connectToRabbitMQ(): Promise<void> {
-  try {
-    if (!connection) {
-      console.log(" Connecting to RabbitMQ...");
-      let connection = await amqplib.connect(RABBITMQ_URL);
-      channel = await connection.createChannel();
-      console.log(" Connected to RabbitMQ!");
-    }
-  } catch (error) {
-    console.error(" RabbitMQ Connection Error:", error);
-    throw error;
-  }
-}
-
-
 export async function consumeFromQueue(queue: string, callback: (message: any) => void): Promise<void> {
   try {
-    await connectToRabbitMQ();
-    if (!channel) throw new Error("Channel is not initialized");
+    const connection = await amqplib.connect(RABBITMQ_URL);
+    const channel: Channel = await connection.createChannel();
     
-    await channel.assertQueue(queue);
-    console.log(`📥 Waiting for messages in queue:in ai service ${queue}...`);
-    
+    await channel.assertQueue(queue, { durable: true });
+
+    console.log(`📥 Waiting for messages in queue: ${queue}...`);
+
     channel.consume(queue, (msg: ConsumeMessage | null) => {
       if (msg) {
-        console.log("🟢 Raw message received:", msg.content.toString("utf-8"));
-        const data = JSON.parse(msg.content.toString("utf-8"));
-        // console.log(`Received message in ai service`, data);
-        callback(data);
-        channel?.ack(msg);
+        try {
+          console.log("🟢 Raw message received:", msg.content.toString("utf-8"));
+          const data = JSON.parse(msg.content.toString("utf-8"));
+          callback(data);
+          channel.ack(msg); // ✅ Acknowledge safely
+        } catch (err) {
+          console.error("❌ Error processing message:", err);
+          // Optional: channel.nack(msg); // requeue if needed
+        }
       }
-    });
+    }, { noAck: false }); // ✅ Required if calling channel.ack
   } catch (error) {
     console.error("RabbitMQ Consumer Error:", error);
   }

@@ -5,7 +5,7 @@ const userCache = new Map<string, any>();
 async function startConsumer() {
     console.log("Initializing RabbitMQ consumer...");
   
-    await consumeFromQueue("userData", async (data) => {
+    await consumeFromQueue("adminUserData", async (data) => {
         if (data) {
             userCache.set(data._id, data);
             console.log("AI Tutor consumer received user_fetched event:", userCache);

@@ -10,7 +10,7 @@ dotenv.config();
 const app = express();
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:8000"], // Replace with your frontend URL
+    origin: ["http://localhost:5173", "https://intellecta-web.vercel.app"], 
     credentials: true, // Allow cookies/auth headers
   })
 );

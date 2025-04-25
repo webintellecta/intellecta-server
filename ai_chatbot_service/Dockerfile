@@ -1,7 +1,5 @@
-# Use official Node.js Alpine image
 FROM node:20-alpine
 
-# Set working directory
 WORKDIR /app
 
 # Install necessary build tools for Alpine
@@ -10,22 +8,23 @@ RUN apk add --no-cache bash
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (including TypeScript locally)
+# Install dependencies
 RUN npm install
 
-# Add node_modules/.bin to PATH so `tsc` works
-ENV PATH="./node_modules/.bin:$PATH"
+# Ensure TypeScript is installed globally and set correct permissions
+RUN npm install -g typescript
+RUN chmod +x node_modules/.bin/tsc
 
-# Copy the rest of the app
+# Copy the rest of the application
 COPY . .
 
-# testing tsc version
+# Check the version of TypeScript for debugging
 RUN npx tsc --version
 
-# Build the TypeScript project
+# Build TypeScript project
 RUN npm run build
 
-# Expose the port
+# Expose the port the service runs on
 EXPOSE 5004
 
 # Start the service

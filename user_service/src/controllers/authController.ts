@@ -168,11 +168,13 @@ export const adminLogin = async (req: Request, res: Response) => {
 export const adminLogout = async (req: Request, res: Response) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: false,
+    secure: true,
+    sameSite: "none"
   });
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: false,
+    sameSite: "none",
+    secure: true,
   });
   return res.status(200).json({ message: "user logged out" });
 };

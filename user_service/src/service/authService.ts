@@ -39,7 +39,8 @@ export const registerUser = async (data: any , res:Response) => {
   const token =  generateToken(newUser._id, Number(newUser.age), newUser.role)
   res.cookie("token", token,{
     httpOnly: true,
-    secure: false,
+    secure: true,
+    sameSite: "none"
   })
 
   return { message: "user registered successfully", token:token };
@@ -89,12 +90,14 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
 
   res.cookie("token",token,{
     httpOnly: true,
-    secure: false,
+    secure: true,
+    sameSite: "none",
     maxAge: 24 * 60 * 60 * 60 * 1000,
   })
   res.cookie("refreshToken",refreshToken,{
     httpOnly: true,
-    secure: false,
+    secure: true,
+    sameSite: "none",
     maxAge: 24 * 60 * 60 * 60 * 1000,
   })
   return {
@@ -157,15 +160,15 @@ export const googleAuthentication = async (data: GoogleAuthData, res: Response) 
 
   res.cookie("token",token,{
     httpOnly: true,
-    secure: false,
+    secure: true,
     maxAge: 24 * 60 * 60 * 60 * 1000,
-    // sameSite:"none"
+    sameSite:"none"
   })
   res.cookie("refreshToken",refreshToken,{
     httpOnly: true,
-    secure: false,
+    secure: true,
     maxAge: 24 * 60 * 60 * 60 * 1000,
-    // sameSite:"none"
+    sameSite:"none"
   })
 
   return {
@@ -183,11 +186,13 @@ export const googleAuthentication = async (data: GoogleAuthData, res: Response) 
 export const logOutUserService = async(data:any , res:Response)=>{
   res.clearCookie("token",{
       httpOnly: true,
-      secure: false,
+      secure: true,
+      sameSite: "none"
   })
   res.clearCookie("refreshToken",{
       httpOnly: true,
-      secure: false,
+      secure: true,
+      sameSite: "none"
   })
   
   return {message:"user logged out"}
@@ -244,7 +249,8 @@ export const adminLoginService = async(data: LoginData, res:Response) : Promise<
   
   res.cookie("token",token,{
     httpOnly: true,
-    secure: false,
+    secure: true,
+    sameSite: "none",
     maxAge: 24 * 60 * 60 * 60 * 1000,
   })
   return {

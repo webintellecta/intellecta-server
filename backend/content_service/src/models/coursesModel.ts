@@ -8,6 +8,7 @@ interface ICourse extends Document {
     gradeLevel: number;
     difficultyLevel: string;
     thumbnail?: string | undefined; 
+    isDeleted:boolean;
 } 
 
 
@@ -36,6 +37,10 @@ const CourseSchema: Schema = new Schema(
     thumbnail: { 
       type: String 
     },
+    isDeleted: {
+      type:Boolean,
+      default:false
+    }
   },
   { timestamps: true }
 );

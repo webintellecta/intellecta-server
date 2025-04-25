@@ -12,14 +12,14 @@ async function startConsumer() {
 
       if (users) {
         console.log("Sending user list to admin service");
-        await publishToQueue("userData", users);
+        await publishToQueue("adminUserData", users);
       } else {
         console.warn("No users found");
-        await publishToQueue("userData", []);
+        await publishToQueue("adminUserData", []);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
-      await publishToQueue("userData", []);
+      await publishToQueue("adminUserData", []);
     }
   });
 }

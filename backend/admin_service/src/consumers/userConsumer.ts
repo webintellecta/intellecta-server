@@ -1,5 +1,3 @@
-
-
 import { consumeFromQueue } from "../utils/rabbitmq/rabbitmqConsumer";
 
 const users = new Map<string, any>();
@@ -7,8 +5,9 @@ const users = new Map<string, any>();
 async function startConsumer() {
   console.log("Initializing RabbitMQ consumer...");
 
-  await consumeFromQueue("userData", async (data) => {
-    // console.log("Admin Service received 'userData' event:", data);
+  // Change the queue name to "adminUserData" to consume messages from the admin user data queue
+  await consumeFromQueue("adminUserData", async (data) => {  // Changed the queue name here
+    // console.log("Admin Service received 'adminUserData' event:", data);
 
     if (Array.isArray(data)) {
       // If it's a list of users

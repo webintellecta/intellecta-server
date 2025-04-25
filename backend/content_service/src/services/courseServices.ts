@@ -53,7 +53,7 @@ export const getAllCoursesBySubjectService = async (
     throw new CustomError("Please provide the subject", 404);
   }
 
-  const courses = await Course.find({ subject, gradeLevel });
+  const courses = await Course.find({ subject, gradeLevel , isDeleted:false});
   if (!courses || courses.length === 0) {
     throw new CustomError("There are no course for this subject", 404);
   }
@@ -111,6 +111,7 @@ export const searchCoursesService = async (
   const query: any = {};
   if (subject) query.subject = subject;
   if (level) query.difficultyLevel = level;
+  query.isDeleted = false
 
   const courses = await Course.find(query);
   if (!courses || courses.length === 0) {
@@ -142,12 +143,11 @@ export const getFilteredCoursesService = async (
     const levels = difficultyLevel.split(",").map((l) => l.toLowerCase());
     filter.difficultyLevel = { $in: levels };
   }
+  filter.isDeleted = false
   const courses = await Course.find(filter);
   if (!courses || courses.length === 0) {
-    console.log("No courses found for filter:", filter);
     throw new CustomError("No courses found for the given filters", 404);
   }
 
-  console.log("Courses found:", courses.length);
   return { courses };
 };

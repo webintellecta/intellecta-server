@@ -7,7 +7,6 @@
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc"
   },
-  
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -27,6 +26,6 @@
     "@types/node": "^22.13.13",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }

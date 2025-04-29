@@ -93,12 +93,15 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
     secure: true,
     sameSite: "none",
     maxAge: 24 * 60 * 60 * 60 * 1000,
+    path: "/"
   })
   res.cookie("refreshToken",refreshToken,{
     httpOnly: true,
     secure: true,
     sameSite: "none",
     maxAge: 24 * 60 * 60 * 60 * 1000,
+    path: "/"
+
   })
   return {
       message: "User logged in", 
@@ -162,13 +165,15 @@ export const googleAuthentication = async (data: GoogleAuthData, res: Response) 
     httpOnly: true,
     secure: true,
     maxAge: 24 * 60 * 60 * 60 * 1000,
-    sameSite:"none"
+    sameSite:"none",
+    path: "/"
   })
   res.cookie("refreshToken",refreshToken,{
     httpOnly: true,
     secure: true,
     maxAge: 24 * 60 * 60 * 60 * 1000,
-    sameSite:"none"
+    sameSite:"none",
+    path: "/"
   })
 
   return {
@@ -187,12 +192,15 @@ export const logOutUserService = async(data:any , res:Response)=>{
   res.clearCookie("token",{
       httpOnly: true,
       secure: true,
-      sameSite: "none"
+      sameSite: "none",
+      path: "/"
+
   })
   res.clearCookie("refreshToken",{
       httpOnly: true,
       secure: true,
-      sameSite: "none"
+      sameSite: "none",
+      path: "/"
   })
   
   return {message:"user logged out"}

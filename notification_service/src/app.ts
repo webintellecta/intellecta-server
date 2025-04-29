@@ -18,7 +18,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({extended: true}))
 app.use(cookieParser())
-app.use('/api/notification',notificationServiceRouter)
+app.use('/',notificationServiceRouter)
 
 
 app.use(errorHandler as (err: any,req: Request,res: Response, next: NextFunction) => void);

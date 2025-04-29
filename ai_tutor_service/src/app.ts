@@ -18,7 +18,7 @@ app.use(
 app.use(express.json());
 app.use(cookieParser())
 
-app.use("/api/ai-tutor", assessmentRoutes);
+app.use("/", assessmentRoutes);
 
 const errorHandlerMiddleware: ErrorRequestHandler = (err, req, res, next) => {
     errorHandler(err, req, res, next);

@@ -10,12 +10,9 @@ export async function consumeFromQueue(queue: string, callback: (message: any) =
     
     await channel.assertQueue(queue, { durable: true });
 
-    console.log(`📥 Waiting for messages in queue: ${queue}...`);
-
     channel.consume(queue, (msg: ConsumeMessage | null) => {
       if (msg) {
         try {
-          console.log("🟢 Raw message received:", msg.content.toString("utf-8"));
           const data = JSON.parse(msg.content.toString("utf-8"));
           callback(data);
           channel.ack(msg); // ✅ Acknowledge safely

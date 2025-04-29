@@ -16,6 +16,7 @@ function startConsumer() {
         console.log("Initializing RabbitMQ consumer...");
         yield (0, rabbitmqConsumer_1.consumeFromQueue)("userProgressData", (data) => __awaiter(this, void 0, void 0, function* () {
             if (data) {
+                console.log("faris ================= ", data);
                 userProgressCache.set(data._id, data);
                 console.log("User progress data received event:", userProgressCache);
             }

@@ -18,6 +18,7 @@ import {
   getAllUsers,
   getBulkUsers,
   getUserById,
+  getUserByIdParams,
   profilePictureController,
   userEditController,
 } from "../controllers/userController";
@@ -43,6 +44,10 @@ userServiceRouter.get(
   "/getuserbyid",
   isAuthenticate,
   asyncHandler(getUserById)
+);
+userServiceRouter.get(
+  "/:userId",
+  asyncHandler(getUserByIdParams)
 );
 
 //forgot-password

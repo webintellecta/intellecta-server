@@ -45,17 +45,25 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.publishToQueue = publishToQueue;
 exports.consumeFromQueue = consumeFromQueue;
 const amqplib = __importStar(require("amqplib"));
-const RABBITMQ_URL = "amqp://admin:password@rabbitmq:5672";
-// let connection: Connection | null = null;
-// let channel: Channel | null = null;
-function connectToRabbitMQ() {
+const RABBITMQ_URL = "amqps://gdtwxeui:3UnJrv2d5M1lHN4Ro9TZ8FFI2BDO6M86@leopard.lmq.cloudamqp.com/gdtwxeui";
+let connection = null;
+function getConnection() {
     return __awaiter(this, void 0, void 0, function* () {
+        if (connection)
+            return connection;
         try {
             console.log("🔄 Connecting to RabbitMQ...");
-            const conn = yield amqplib.connect(RABBITMQ_URL);
-            const ch = yield conn.createChannel();
+            connection = yield amqplib.connect(RABBITMQ_URL);
             console.log("✅ Connected to RabbitMQ!");
-            return ch;
+            connection.on('close', () => {
+                console.error("❌ RabbitMQ connection closed.");
+                connection = null;
+            });
+            connection.on('error', (err) => {
+                console.error("❌ RabbitMQ connection error:", err);
+                connection = null;
+            });
+            return connection;
         }
         catch (error) {
             console.error("❌ RabbitMQ Connection Error:", error);
@@ -63,16 +71,27 @@ function connectToRabbitMQ() {
         }
     });
 }
+/**
+ * Create a new channel from the existing connection
+ */
+function createChannel() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const conn = yield getConnection();
+        return conn.createChannel();
+    });
+}
+/**
+ * Publishes a message to the specified queue
+ */
 function publishToQueue(queue, data) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
-        let channel;
+        const channel = yield createChannel();
         try {
-            channel = yield connectToRabbitMQ();
-            yield channel.assertQueue(queue);
+            yield channel.assertQueue(queue, { durable: true });
             let message;
-            // Check if it's a Map (single user)
             if (data instanceof Map) {
+                // Convert Map to plain object
                 message = {
                     _id: ((_a = data.get("_id")) === null || _a === void 0 ? void 0 : _a.toString()) || "",
                     name: data.get("name") || "Unknown",
@@ -90,46 +109,41 @@ function publishToQueue(queue, data) {
                 };
             }
             else {
-                // It's either an array of users or a plain object (like already mapped users)
                 message = data;
             }
             channel.sendToQueue(queue, Buffer.from(JSON.stringify(message), "utf-8"));
-            console.log(`Message sent to queue "${queue}"`);
+            console.log(`📤 Message sent to queue "${queue}"`);
         }
         catch (error) {
-            console.error("RabbitMQ Publish Error:", error);
+            console.error("❌ RabbitMQ Publish Error:", error);
             throw error;
         }
         finally {
-            if (channel)
-                yield channel.close();
+            yield channel.close();
         }
     });
 }
+/**
+ * Consumes messages from the queue and handles them via the provided callback
+ */
 function consumeFromQueue(queue, callback) {
     return __awaiter(this, void 0, void 0, function* () {
-        let channel;
-        try {
-            channel = yield connectToRabbitMQ();
-            yield channel.assertQueue(queue);
-            channel.prefetch(1);
-            console.log(`📥 Waiting for messages in queue userservice: ${queue}...`);
-            channel.consume(queue, (msg) => __awaiter(this, void 0, void 0, function* () {
-                if (msg) {
-                    const data = JSON.parse(msg.content.toString());
-                    console.log(`📩 Received message in userservice`, data);
-                    try {
-                        yield callback(data, msg);
-                        channel.ack(msg); // ✅ Acknowledge the message after successful processing
-                    }
-                    catch (error) {
-                        console.error("❌ Error processing message:", error);
-                    }
+        const channel = yield createChannel();
+        yield channel.assertQueue(queue, { durable: true });
+        channel.prefetch(1);
+        console.log(`📥 Waiting for messages in queue: ${queue}...`);
+        channel.consume(queue, (msg) => __awaiter(this, void 0, void 0, function* () {
+            if (msg) {
+                const data = JSON.parse(msg.content.toString());
+                console.log(`📩 Received message:`, data);
+                try {
+                    yield callback(data, msg);
+                    channel.ack(msg);
                 }
-            }), { noAck: false });
-        }
-        catch (error) {
-            console.error("❌ RabbitMQ Consumer Error:", error);
-        }
+                catch (error) {
+                    console.error("❌ Error processing message:", error);
+                }
+            }
+        }), { noAck: false });
     });
 }

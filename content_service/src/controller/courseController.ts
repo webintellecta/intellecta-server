@@ -5,9 +5,8 @@ import Quiz from "../models/LessonQuiz";
 import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getFilteredCoursesService, getLessonByIdService, searchCoursesService } from "../services/courseServices";
 import CustomError from "../utils/customError";
 import { mapAgeToGradeAndDifficulty } from "../utils/gradeMapping";
-import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
-import { getUserData } from "../consumers/userConsumers";
 import { uploadToS3 } from "../middlewares/upload";
+import axios from "axios";
 
 
 
@@ -65,7 +64,7 @@ export const getAllCourses = async( req: Request, res: Response) => {
     const { courses, totalCourses } = await getAllCoursesService({ skip, limit, filter });
     const totalPages = Math.ceil(totalCourses / limit);
     // console.log("good", courses);
-    res.status(200).json({status:"success", message:'All Courses fetched successfully', 
+    return res.status(200).json({status:"success", message:'All Courses fetched successfully', 
       data:{
         courses,
         pagination: {
@@ -119,42 +118,24 @@ export const getAllCoursesBySubject = async (req: AuthRequest, res: Response) =>
     throw new CustomError("Unauthorized access. User ID not found.", 401);
   }
 
-  const userId = req.user._id;
-
-  // Publishing to queue asynchronously (non-blocking)
-  console.log("Step 2: Publishing to queue...");
-  publishToQueue("user_id", userId);
-  console.log("Step 2: Queue published.");
 
   // Fetch user data
-  console.log("Step 3: Fetching user data...");
-  let userData;
-  try {
-    userData = await getUserData(userId) as UserData;
-  } catch (err) {
-    console.error("Error fetching user data:", err);
-    throw new CustomError("User data not found. Try again later.", 400);
-  }
-
+  let {data: userData} = await axios.get(`http://user-service:5000/api/user/${req.user._id}`)
+  console.log("userdata ",userData);
+  
   if (!userData) {
     throw new CustomError("User data not found. Try again later.", 400);
   }
 
-  console.log("Step 4: User data fetched, processing age...");
-  if (userData instanceof Map) {
-    userData = Object.fromEntries(userData) as UserData;
-  }
 
-  const age = userData.age;
+  const age = userData.data.user.age;
   if (!age) {
     throw new CustomError("User age not found in token", 400);
   }
 
   // Fetch courses by subject and gradeLevel
-  console.log("Step 5: Mapping age to gradeLevel and difficultyLevel...");
   const { gradeLevel, difficultyLevel } = mapAgeToGradeAndDifficulty(age);
 
-  console.log("Step 6: Fetching courses...");
   let courses;
   try {
     courses = await getAllCoursesBySubjectService(subject, gradeLevel);
@@ -163,7 +144,6 @@ export const getAllCoursesBySubject = async (req: AuthRequest, res: Response) =>
     throw new CustomError("Error fetching courses by subject.", 500);
   }
 
-  console.log("Step 7: Courses fetched, sending response.");
   res.status(200).json({
     status: "success",
     message: "Courses by subject fetched successfully",

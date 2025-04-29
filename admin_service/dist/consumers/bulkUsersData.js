@@ -21,7 +21,6 @@ function startConsumer() {
                 users.forEach((user) => {
                     bulkUsersCache.set(user._id.toString(), user);
                 });
-                console.log("✅ Fetched and cached bulk user details:", users);
             }
             else {
                 console.warn("⚠️ Invalid users data received:", users);

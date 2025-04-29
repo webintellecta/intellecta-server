@@ -47,7 +47,8 @@ const registerUser = (data, res) => __awaiter(void 0, void 0, void 0, function* 
     const token = (0, jwt_1.generateToken)(newUser._id, Number(newUser.age), newUser.role);
     res.cookie("token", token, {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: "none"
     });
     return { message: "user registered successfully", token: token };
 });
@@ -65,12 +66,14 @@ const loginUserService = (data, res) => __awaiter(void 0, void 0, void 0, functi
     const refreshToken = (0, jwt_1.generateRefreshToken)(userExist._id.toString(), userExist.age);
     res.cookie("token", token, {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: "none",
         maxAge: 24 * 60 * 60 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: "none",
         maxAge: 24 * 60 * 60 * 60 * 1000,
     });
     return {
@@ -114,15 +117,15 @@ const googleAuthentication = (data, res) => __awaiter(void 0, void 0, void 0, fu
     const refreshToken = (0, jwt_1.generateRefreshToken)(user._id.toString(), Number(user.age));
     res.cookie("token", token, {
         httpOnly: true,
-        secure: false,
+        secure: true,
         maxAge: 24 * 60 * 60 * 60 * 1000,
-        // sameSite:"none"
+        sameSite: "none"
     });
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,
+        secure: true,
         maxAge: 24 * 60 * 60 * 60 * 1000,
-        // sameSite:"none"
+        sameSite: "none"
     });
     return {
         message: "User logged in via Google",
@@ -138,11 +141,13 @@ exports.googleAuthentication = googleAuthentication;
 const logOutUserService = (data, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.clearCookie("token", {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: "none"
     });
     res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: "none"
     });
     return { message: "user logged out" };
 });
@@ -194,7 +199,8 @@ const adminLoginService = (data, res) => __awaiter(void 0, void 0, void 0, funct
     const token = (0, jwt_1.generateToken)((_a = adminExist._id) === null || _a === void 0 ? void 0 : _a.toString(), adminExist.age, adminExist.role);
     res.cookie("token", token, {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: "none",
         maxAge: 24 * 60 * 60 * 60 * 1000,
     });
     return {

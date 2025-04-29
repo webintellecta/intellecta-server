@@ -44,7 +44,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.consumeFromQueue = consumeFromQueue;
 const amqplib = __importStar(require("amqplib"));
-const RABBITMQ_URL = "amqp://admin:password@rabbitmq:5672";
+const RABBITMQ_URL = "amqps://gdtwxeui:3UnJrv2d5M1lHN4Ro9TZ8FFI2BDO6M86@leopard.lmq.cloudamqp.com/gdtwxeui";
 function consumeFromQueue(queue, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

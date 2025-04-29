@@ -44,21 +44,35 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.publishToQueue = publishToQueue;
 const amqplib = __importStar(require("amqplib"));
-const RABBITMQ_URL = "amqp://admin:password@rabbitmq:5672";
+const RABBITMQ_URL = "amqps://gdtwxeui:3UnJrv2d5M1lHN4Ro9TZ8FFI2BDO6M86@leopard.lmq.cloudamqp.com/gdtwxeui";
+// Declare connection and channel with correct types
 let connection = null;
 let channel = null;
 function connectToRabbitMQ() {
     return __awaiter(this, void 0, void 0, function* () {
+        if (connection && channel)
+            return; // Already connected
         try {
-            if (!connection) {
-                console.log(" Connecting to RabbitMQ...");
-                let connection = yield amqplib.connect(RABBITMQ_URL);
-                channel = yield connection.createChannel();
-                console.log(" Connected to RabbitMQ!");
-            }
+            console.log("Connecting to RabbitMQ...");
+            // Ensure the connection is typed correctly
+            connection = yield amqplib.connect(RABBITMQ_URL || 'amqp://localhost');
+            // The connection object is of type 'Connection', so we can safely call 'createChannel' here
+            channel = yield connection.createChannel();
+            console.log("Connected to RabbitMQ!");
+            // Handling unexpected connection closure
+            connection.on('close', () => {
+                console.error("RabbitMQ connection closed!");
+                connection = null;
+                channel = null;
+            });
+            connection.on('error', (err) => {
+                console.error("RabbitMQ connection error!", err);
+                connection = null;
+                channel = null;
+            });
         }
         catch (error) {
-            console.error(" RabbitMQ Connection Error:", error);
+            console.error("RabbitMQ Connection Error:", error);
             throw error;
         }
     });
@@ -66,13 +80,15 @@ function connectToRabbitMQ() {
 function publishToQueue(queue, message) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            // Ensure RabbitMQ is connected
             yield connectToRabbitMQ();
             if (!channel)
                 throw new Error("Channel is not initialized");
-            yield channel.assertQueue(queue);
+            // Assert queue (ensure it exists)
+            yield channel.assertQueue(queue, { durable: true }); // Durable queue: survives server restart
+            // Send message to the queue
             channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
-            console.log(` adminService need some details ${queue}`);
-            // setTimeout(() => connection.close(), 500);
+            console.log(`Published message to queue: ${queue}`);
         }
         catch (error) {
             console.error("RabbitMQ Publish Error:", error);

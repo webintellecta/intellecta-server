@@ -12,7 +12,7 @@ const adminRouter_1 = __importDefault(require("./router/adminRouter"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "https://intellecta-web.vercel.app"],
     credentials: true,
 }));
 app.use(express_1.default.json());

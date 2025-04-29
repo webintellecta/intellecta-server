@@ -3,7 +3,7 @@ import CustomError from "../utils/CustomError";
 import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
 import { users } from "../consumers/userConsumer";
 import userProgressCache from "../consumers/progressData";
-import bulkUsersCache from "../consumers/bulkUsersData";
+import axios from "axios";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -22,18 +22,16 @@ export const adminDashboard = async (
   }
 
   await publishToQueue("allUserDetails", userId);
-
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  const allUsers = Array.from(users.values());
-  const filteredUsers = allUsers.filter(user => user.role === "student");
+  
+  
+  
+  const filteredUsers = Array.from(users.values()).filter(user => !user.isDeleted);
 
 
   if (!filteredUsers.length) {
     return res.status(404).json({ message: "No users found." });
   }
 
-  //UserRegistration Details
 
   const now = new Date();
 
@@ -162,16 +160,19 @@ export const getTopPerfomingStudents = async (
   const userProgressList = UsersProgressData.flatMap((d: any) => d.userProgress || []);
   const userIds = userProgressList.map((up: any) => up.userId);
 
-  // Step 3: Request full user details for those top users
-  await publishToQueue("fetchBulkUserDetails", { userIds });
+  const { data: usersData }: { data: any } = await axios.post(
+    "http://user-service:5000/api/user/bulk",
+    { userIds }
+  );
 
-  // Wait for user data to be populated in cache
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+  if (!usersData || usersData.length === 0) {
+    return res.status(404).json({ message: "User details not found." });
+  }
 
-  // Step 4: Map userId to user data
-  const UsersDetailsMap = new Map(userIds.map((id) => [id, bulkUsersCache.get(id)]));
+  // Step 3: Map user data to user progress
+  const UsersDetailsMap = new Map(usersData.map((user: any) => [user._id, user]));
 
-  // Step 5: Merge user data with progress data
+  // Step 4: Merge user data with progress data
   const result = userProgressList.map((progress: any) => ({
     ...progress,
     user: UsersDetailsMap.get(progress.userId) || null,
@@ -182,4 +183,3 @@ export const getTopPerfomingStudents = async (
     data: result,
   });
 };
-

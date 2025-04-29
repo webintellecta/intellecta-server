@@ -147,3 +147,14 @@ export const deleteUser = async (req:AuthenticatedRequest, res: Response ) => {
   });
 
 }
+
+
+
+export const getUserByIdParams = async (req:Request , res:Response) => {
+  const {userId} = req.params;
+  if(!userId){
+      throw new CustomError("user not found",404)
+  }
+  const userData = await getUserByIdService(userId)
+  res.status(200).json({success:true, message:userData.message, data:userData})
+}

@@ -7,8 +7,6 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       mongodb:
         condition: service_started
     networks:
@@ -28,7 +26,6 @@ services:
     ports:
       - "5002:5002"
     depends_on:
-      - rabbitmq
       - mongodb
     networks:
       - intellecta-network
@@ -53,8 +50,6 @@ services:
     ports:
       - "5001:5001"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       mongodb:
         condition: service_started
       user-service:
@@ -75,8 +70,6 @@ services:
     ports:
       - "5005:5005"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       mongodb:
         condition: service_started
     networks:
@@ -96,8 +89,6 @@ services:
     ports:
       - "5004:5004"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       mongodb:
         condition: service_started
     networks:
@@ -116,8 +107,6 @@ services:
     ports:
       - "5006:5006"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       mongodb:
         condition: service_started
     networks:
@@ -137,8 +126,6 @@ services:
     ports:
       - "5008:5008"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       mongodb:
         condition: service_started
     networks:
@@ -157,8 +144,6 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       mongodb:
         condition: service_started
     networks:
@@ -171,23 +156,23 @@ services:
     command: npm run dev  # Runs nodemon for hot-reloading
     restart: unless-stopped
 
-  rabbitmq:
-    image: "rabbitmq:3-management"
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: "admin"
-      RABBITMQ_DEFAULT_PASS: "password"
-    networks:
-      - intellecta-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # rabbitmq:
+  #   image: "rabbitmq:3-management"
+  #   container_name: rabbitmq
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: "admin"
+  #     RABBITMQ_DEFAULT_PASS: "password"
+  #   networks:
+  #     - intellecta-network
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "rabbitmqctl", "status"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
   mongodb:
     image: mongo

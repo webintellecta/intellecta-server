@@ -5,21 +5,37 @@ const RABBITMQ_URL = "amqps://gdtwxeui:3UnJrv2d5M1lHN4Ro9TZ8FFI2BDO6M86@leopard.
 
 let connection: Connection | null = null;
 let channel: Channel | null = null;
-
 async function connectToRabbitMQ(): Promise<void> {
+  if (connection && channel) return; // Already connected
+
   try {
-    if (!connection) {
-      console.log(" Connecting to RabbitMQ...");
-      let connection = await amqplib.connect(RABBITMQ_URL);
-      channel = await connection.createChannel();
-      console.log(" Connected to RabbitMQ!");
-    }
+    console.log("Connecting to RabbitMQ...");
+    
+    // Ensure the connection is typed correctly
+    connection = await amqplib.connect(RABBITMQ_URL || 'amqp://localhost');
+    
+    // The connection object is of type 'Connection', so we can safely call 'createChannel' here
+    channel = await connection.createChannel();
+    console.log("Connected to RabbitMQ!");
+
+    // Handling unexpected connection closure
+    connection.on('close', () => {
+      console.error("RabbitMQ connection closed!");
+      connection = null;
+      channel = null;
+    });
+
+    connection.on('error', (err) => {
+      console.error("RabbitMQ connection error!", err);
+      connection = null;
+      channel = null;
+    });
+
   } catch (error) {
-    console.error(" RabbitMQ Connection Error:", error);
+    console.error("RabbitMQ Connection Error:", error);
     throw error;
   }
 }
-
 
 export async function consumeFromQueue(queue: string, callback: (message: any) => void): Promise<void> {
   try {
@@ -27,11 +43,9 @@ export async function consumeFromQueue(queue: string, callback: (message: any) =
     if (!channel) throw new Error("Channel is not initialized");
     
     await channel.assertQueue(queue);
-    console.log(`📥 Waiting for messages in queue:in ai service ${queue}...`);
     
     channel.consume(queue, (msg: ConsumeMessage | null) => {
       if (msg) {
-        console.log("🟢 Raw message received:", msg.content.toString("utf-8"));
         const data = JSON.parse(msg.content.toString("utf-8"));
         // console.log(`Received message in ai service`, data);
         callback(data);

@@ -1,68 +1,41 @@
-// import { consumeFromQueue } from "../utils/rabbitmq/rabbitmqConsumer"; 
+import { consumeFromQueue } from "../utils/rabbitmq/rabbitmqConsumer";
 
-// const userCache = new Map<string, any>();
+const userCache: Record<string, any> = {};
 
-// async function startConsumer() {
-//     console.log("Initializing RabbitMQ consumer...");
-  
-//     await consumeFromQueue("userData", async (data) => {
-//         if (data) {
-//             userCache.set(data._id, data);
-//             console.log("Content consumer received user_fetched event:", userCache);
-//         }
-//     });
-// }
-
-// startConsumer().catch((err) => console.error("Failed to start consumer:", err));
-
-// export function getUserData(userId: string) {
-//     return new Promise((resolve, reject) => {
-//         const checkCache = () => {
-//             if (userCache.has(userId)) {
-//                 resolve(userCache.get(userId));
-//             } else {
-//                 setTimeout(checkCache, 500); 
-//             }
-//         };
-//         checkCache();
-//     });
-// }
-
-
-import { consumeFromQueue } from "../utils/rabbitmq/rabbitmqConsumer"; 
-
-const userCache = new Map<string, any>();
-
+// Function to start the RabbitMQ consumer to listen for user data
 async function startConsumer() {
     console.log("Initializing RabbitMQ consumer...");
-  
+
     await consumeFromQueue("userData", async (data) => {
-        if (data) {
-            console.log("Received user data:", data);
-            userCache.set(data._id, data);
-            console.log("User data cached:", userCache);
+        if (data && data._id) {
+            // Cache user data using user._id as the key
+            userCache[data._id] = data;
+            console.log("User data cached:", data._id);
         }
     });
 }
 
+// Start the consumer
 startConsumer().catch((err) => console.error("Failed to start consumer:", err));
 
-export function getUserData(userId: string): Promise<any> {
+// Function to get user data from the cache
+export function getUserData(userId: string) {
     return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-            reject(new Error("Timeout: User data not found in cache"));
-        }, 2000); // Increase timeout to 5 seconds
+        const timeout = 5000; // Set a timeout for retrying
+        const startTime = Date.now();
 
         const checkCache = () => {
-            console.log("Checking cache for user:", userId);
-            if (userCache.has(userId)) {
-                console.log("User data found in cache:", userCache.get(userId));
-                clearTimeout(timeout);
-                resolve(userCache.get(userId));
+            if (userCache[userId]) {
+                resolve(userCache[userId]);
+            } else if (Date.now() - startTime > timeout) {
+                reject(new Error("Timeout: User data not found in cache."));
             } else {
-                setTimeout(checkCache, 500); // Check again in 1 second
+                setTimeout(checkCache, 500); // Retry after 500ms
             }
         };
+
         checkCache();
     });
 }
+
+export { userCache };

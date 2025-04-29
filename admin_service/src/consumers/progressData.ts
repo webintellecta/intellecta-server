@@ -6,9 +6,8 @@ async function startConsumer() {
     console.log("Initializing RabbitMQ consumer...");
   
     await consumeFromQueue("userProgressData", async (data) => {        
-        if (data) {
+        if (data) {            
             userProgressCache.set(data._id, data);
-            console.log("User progress data received event:", userProgressCache);
         }
     });
 }

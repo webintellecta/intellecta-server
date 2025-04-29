@@ -27,13 +27,10 @@ export async function consumeFromQueue(queue: string, callback: (message: any) =
     if (!channel) throw new Error("Channel is not initialized");
     
     await channel.assertQueue(queue);
-    console.log(`📥 Waiting for messages in queue:in ai service ${queue}...`);
     
     channel.consume(queue, (msg: ConsumeMessage | null) => {
       if (msg) {
-        // console.log("🟢 Raw message received:", msg.content.toString("utf-8"));
         const data = JSON.parse(msg.content.toString("utf-8"));
-        console.log(`Received message in notification_service`, data);
         callback(data);
         channel?.ack(msg);
       }

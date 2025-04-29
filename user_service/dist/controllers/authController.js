@@ -160,11 +160,13 @@ exports.adminLogin = adminLogin;
 const adminLogout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.clearCookie("token", {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: "none"
     });
     res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: false,
+        sameSite: "none",
+        secure: true,
     });
     return res.status(200).json({ message: "user logged out" });
 });

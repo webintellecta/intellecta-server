@@ -8,12 +8,12 @@ import cors from 'cors'
 dotenv.config();
 
 const app = express();
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "https://intellecta-web.vercel.app"], 
-    credentials: true, // Allow cookies/auth headers
-  })
-);
+// app.use(
+//   cors({
+//     origin: ["http://localhost:5173", "https://intellecta-web.vercel.app"], 
+//     credentials: true, // Allow cookies/auth headers
+//   })
+// );
 app.use(express.json());
 app.use(cookieParser())
 

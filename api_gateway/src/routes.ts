@@ -41,5 +41,6 @@ router.use("/api/courses", createProxy(SERVICES.content));
 router.use("/api/ai-chatbot", createProxy(SERVICES.chatbot));
 
 router.use("/api/admin", createProxy(SERVICES.admin));
+router.use("/api/notification", createProxy(SERVICES.notification));
 
 export default router;

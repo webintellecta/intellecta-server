@@ -17,8 +17,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/", courseRoutes);
-app.use("/", progressRoutes);
-app.use("/", lessonRoutes);
+app.use("/progress", progressRoutes);
+app.use("/lessons", lessonRoutes);
 
 const errorHandlerMiddleware: ErrorRequestHandler = (err, req, res, next) => {
     globalErrorHandler(err, req, res, next);

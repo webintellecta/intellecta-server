@@ -120,7 +120,7 @@ export const getAllCoursesBySubject = async (req: AuthRequest, res: Response) =>
 
 
   // Fetch user data
-  let {data: userData} = await axios.get(`https://intellecta-user-service.onrender.com/api/user/${req.user._id}`)
+  let {data: userData} = await axios.get(`https://intellecta-api-gateway.onrender.com/api/user/${req.user._id}`)
   console.log("userdata ",userData);
   
   if (!userData) {

@@ -161,7 +161,7 @@ export const getTopPerfomingStudents = async (
   const userIds = userProgressList.map((up: any) => up.userId);
 
   const { data: usersData }: { data: any } = await axios.post(
-    "http://user-service:5000/api/user/bulk",
+    "https://intellecta-api-gateway.onrender.com/api/user/bulk",
     { userIds }
   );
 

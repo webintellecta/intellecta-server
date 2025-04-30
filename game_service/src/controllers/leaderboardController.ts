@@ -55,7 +55,7 @@ export const getLeaderboard = async (
   );
 
   const { data: usersData }: { data: User[] } = await axios.post(
-    "http://user-service:5000/api/user/bulk",
+    "https://intellecta-api-gateway.onrender.com/api/user/bulk",
     { userIds }
   );
 

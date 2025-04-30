@@ -13,8 +13,14 @@ app.use(cors({
     credentials:true
 }));
 
+// app.use(express.json());
 app.use(routes);
-app.use(express.json());
+
+app.use((req, res, next) => {
+    console.log(`[${req.method}] ${req.originalUrl}`);
+    next();
+});
+
 
 app.listen(PORT, () => {
     console.log(`API Gateway running on port ${PORT}`);

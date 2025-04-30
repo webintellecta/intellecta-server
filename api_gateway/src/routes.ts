@@ -5,9 +5,9 @@ import { IncomingMessage, ServerResponse } from "http";
 
 const router = Router();
 
-// router.get('/health', (req: Request, res: Response) => {
-//     res.status(200).send('API Gateway is running');
-// });
+router.get('/health', (req: Request, res: Response) => {
+    res.status(200).send('API Gateway is running');
+});
 
 const handleProxyError = (serviceName: string) => {
   return (err: Error, req: Request, res: Response) => {

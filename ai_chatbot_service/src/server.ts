@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import connectDB from "./config/db";
 import dotenv from "dotenv";
 import http from "http";
@@ -9,6 +9,11 @@ import cors from "cors";
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
+
+app.get("/health", (req:Request, res:Response) => {
+    res.status(200).send("OK");
+});  
+
 const io = new Server(server, {
     cors: { origin: "*" }, // Allow all origins for testing
 });

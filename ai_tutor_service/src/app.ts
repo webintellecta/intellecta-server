@@ -1,4 +1,4 @@
-import express, { ErrorRequestHandler}  from "express";
+import express, { ErrorRequestHandler, Request, Response}  from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import assessmentRoutes from "./routes/assessmentRoutes";
@@ -8,12 +8,10 @@ import cookieParser from "cookie-parser";
 dotenv.config();
 
 const app = express();
-// app.use(
-//     cors({
-//       origin: ["http://localhost:5173","https://intellecta-web.vercel.app"],
-//       credentials: true,
-//     })
-//   );
+
+app.get("/health", (req:Request, res:Response) => {
+    res.status(200).send("OK");
+});  
 
 app.use(express.json());
 app.use(cookieParser())

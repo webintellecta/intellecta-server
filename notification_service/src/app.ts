@@ -9,12 +9,9 @@ import notificationServiceRouter from "./router/notificationrouter";
 dotenv.config();
 
 const app = express();
-// app.use(
-//   cors({
-//     origin: ["http://localhost:5173","https://intellecta-web.vercel.app"],
-//     credentials: true, 
-//   })
-// );
+app.get("/health", (req:Request, res:Response) => {
+    res.status(200).send("OK");
+});  
 app.use(express.json());
 app.use(express.urlencoded({extended: true}))
 app.use(cookieParser())

@@ -13,16 +13,20 @@ interface AuthenticatedRequest extends Request {
 export const getallUsers = async(req: AuthenticatedRequest, res: Response) => {
 
   const userId = req.user?.userId;
+  console.log("first ");
 
   if (!userId) {
     throw new CustomError("User ID is required", 400);
   }
+  console.log("second");
 
   await publishToQueue("allUserDetails", userId);
 
   await new Promise((resolve) => setTimeout(resolve, 1500));
 
   const allUsers = Array.from(users.values()).filter(user => !user.isDeleted);
+  console.log("all users ",users);
+  
 
   if (!allUsers.length) {
     return res.status(404).json({ message: "No users found." });

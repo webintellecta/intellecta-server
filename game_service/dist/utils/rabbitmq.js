@@ -36,20 +36,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.publishToQueue = publishToQueue;
 exports.consumeFromQueue = consumeFromQueue;
 const amqplib = __importStar(require("amqplib"));
-const RABBITMQ_URL = "amqp://admin:password@rabbitmq:5672";
+const RABBITMQ_URL = "amqps://gdtwxeui:3UnJrv2d5M1lHN4Ro9TZ8FFI2BDO6M86@leopard.lmq.cloudamqp.com/gdtwxeui";
 let connection = null;
 let channel = null;
 async function connectToRabbitMQ() {
+    if (connection && channel)
+        return; // Already connected
     try {
-        if (!connection) {
-            console.log("🔄 Connecting to RabbitMQ...");
-            let connection = await amqplib.connect(RABBITMQ_URL);
-            channel = await connection.createChannel();
-            console.log("✅ Connected to RabbitMQ!");
-        }
+        console.log("Connecting to RabbitMQ...");
+        // Ensure the connection is typed correctly
+        connection = await amqplib.connect(RABBITMQ_URL);
+        // The connection object is of type 'Connection', so we can safely call 'createChannel' here
+        channel = await connection.createChannel();
+        console.log("Connected to RabbitMQ!");
+        // Handling unexpected connection closure
+        connection.on('close', () => {
+            console.error("RabbitMQ connection closed!");
+            connection = null;
+            channel = null;
+        });
+        connection.on('error', (err) => {
+            console.error("RabbitMQ connection error!", err);
+            connection = null;
+            channel = null;
+        });
     }
     catch (error) {
-        console.error("❌ RabbitMQ Connection Error:", error);
+        console.error("RabbitMQ Connection Error:", error);
         throw error;
     }
 }

@@ -41,7 +41,7 @@ const getLeaderboard = async (req, res) => {
         .limit(20)
         .sort({ totalScore: -1 });
     const userIds = leaderboardEntries.map((entry) => entry.userId.toString());
-    const { data: usersData } = await axios_1.default.post("http://user-service:5000/api/user/bulk", { userIds });
+    const { data: usersData } = await axios_1.default.post("https://intellecta-api-gateway.onrender.com/api/user/bulk", { userIds });
     const leaderboardWithUsers = await Promise.all(leaderboardEntries.map(async (entry) => {
         const user = usersData.find((u) => u._id === entry.userId.toString());
         let profilePicUrl = null;

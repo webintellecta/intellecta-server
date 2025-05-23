@@ -54,6 +54,7 @@ export const getAllCoursesBySubjectService = async (
   }
 
   const courses = await Course.find({ subject, gradeLevel , isDeleted:false});
+  
   if (!courses || courses.length === 0) {
     throw new CustomError("There are no course for this subject", 404);
   }

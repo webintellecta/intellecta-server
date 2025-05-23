@@ -16,19 +16,17 @@ export const isAuthenticate = async (
   res: Response,
   next: NextFunction
 ) => {
-    const token = req.cookies.token
-    if(!token){
-        return next(new CustomError("Token does not exist in the cookie", 401))
-    }
+  
+  const token = req.cookies.token
+  if(!token){
+    return next(new CustomError("Token does not exist in the cookie", 401))
+  }
     try{
       const decoded =jwt.verify(token, process.env.TOKEN_SECRET as string) as JwtPayload;
-      console.log("hy1");
       if (typeof decoded === "string" || !decoded._id) {
           return next(new CustomError("Invalid token payload", 401));
       }
-      // console.log("hy2",)
       req.user = { userId: decoded._id, age: decoded.age };
-      console.log("hy2", req.user);
       next()
     }
     catch(err){

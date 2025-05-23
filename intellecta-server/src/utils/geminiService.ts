@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
+import CustomError from "./customErrorHandler";
 
 dotenv.config();
 
@@ -9,24 +10,45 @@ export const generateQuizzes = async (prompt: string) => {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     const result = await model.generateContent(prompt);
-    
     return result.response.text();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Error:", error);
-    return "Error generating learning path.";
+
+    if (error.status === 429) {
+      throw new CustomError("API quota exceeded. Please try again later.", 429);
+    }
+    throw new CustomError("Error generating learning path.", 500);
   }
 };
+
+
+// export const generateLearningPath = async (prompt: string) => {
+//   try {
+//     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+//     const result = await model.generateContent(prompt);
+//     return result.response.text();
+//   } catch (error) {
+//     console.error("Gemini Error:", error);
+//     return "Error generating learning path.";
+//   }
+// };
 
 export const generateLearningPath = async (prompt: string) => {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     const result = await model.generateContent(prompt);
     return result.response.text();
-  } catch (error) {
+  } catch (error: any) {
+    // Detect quota exceeded error based on error message or status code
+    if (error.status === 429) {
+      console.error("Gemini quota exceeded:", error.message);
+      throw new Error("API quota exceeded. Please try again later.");
+    }
     console.error("Gemini Error:", error);
-    return "Error generating learning path.";
+    throw new Error("Error generating learning path.");
   }
 };
+
 
 // import { openai } from '../config/openai'; // or however you’ve configured it
 

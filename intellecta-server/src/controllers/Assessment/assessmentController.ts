@@ -20,13 +20,8 @@ export const getAssessmentQuestions = async (req: AuthRequest, res: Response ): 
   }); 
 };
 
-export const evaluateAssessment = async( req: Request, res: Response) => {
-  const token = req.cookies.token;
-  if (!token) {
-    throw new Error("Not authenticated, please login");
-  }
-  const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
-  const userId = decoded._id;
+export const evaluateAssessment = async( req: Request, res: Response) => {  
+  const userId = req.user?.userId;
   if (!userId) {
     throw new Error("Invalid user");
   }

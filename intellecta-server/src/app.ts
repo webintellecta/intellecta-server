@@ -20,12 +20,12 @@ app.use(cors({
   origin: ["https://intellecta-web.vercel.app","http://localhost:5173"],
   credentials: true
 }))
+app.use(cookieParser())
+app.use(express.json());
 
 app.get("/health", (req:Request, res:Response) => {
   res.status(200).send("OK");
 });  
-app.use(express.json());
-app.use(cookieParser())
 
 app.use('/api/user',userServiceRouter)
 app.use('/api/notification',notificationServiceRouter)
